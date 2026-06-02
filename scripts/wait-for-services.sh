@@ -4,7 +4,10 @@ set -euo pipefail
 API_URL="${SALEOR_API_HEALTH_URL:-http://localhost:8000/health/}"
 DASHBOARD_URL="${SALEOR_DASHBOARD_URL:-http://localhost:9000/}"
 STOREFRONT_URL="${SALEOR_STOREFRONT_URL:-http://localhost:3000/}"
+PAYMENT_APP_PORT="${DUMMY_PAYMENT_APP_PORT:-3001}"
+PAYMENT_APP_URL="${DUMMY_PAYMENT_APP_URL:-http://localhost:${PAYMENT_APP_PORT}/api/manifest}"
 WAIT_STOREFRONT="${WAIT_STOREFRONT:-0}"
+WAIT_PAYMENT_APP="${WAIT_PAYMENT_APP:-0}"
 MAX_ATTEMPTS="${MAX_ATTEMPTS:-60}"
 SLEEP_SECONDS="${SLEEP_SECONDS:-5}"
 
@@ -12,6 +15,7 @@ for i in $(seq 1 "$MAX_ATTEMPTS"); do
   api_ok=0
   dashboard_ok=0
   storefront_ok=0
+  payment_app_ok=0
 
   curl -sf "$API_URL" >/dev/null && api_ok=1
   curl -sf -o /dev/null "$DASHBOARD_URL" && dashboard_ok=1
@@ -22,12 +26,18 @@ for i in $(seq 1 "$MAX_ATTEMPTS"); do
     storefront_ok=1
   fi
 
-  if [[ "$api_ok" == "1" && "$dashboard_ok" == "1" && "$storefront_ok" == "1" ]]; then
+  if [[ "$WAIT_PAYMENT_APP" == "1" ]]; then
+    curl -sf -o /dev/null "$PAYMENT_APP_URL" && payment_app_ok=1
+  else
+    payment_app_ok=1
+  fi
+
+  if [[ "$api_ok" == "1" && "$dashboard_ok" == "1" && "$storefront_ok" == "1" && "$payment_app_ok" == "1" ]]; then
     echo "All required services are ready"
     exit 0
   fi
 
-  echo "Waiting for services... ($i/$MAX_ATTEMPTS) api=$api_ok dashboard=$dashboard_ok storefront=$storefront_ok"
+  echo "Waiting for services... ($i/$MAX_ATTEMPTS) api=$api_ok dashboard=$dashboard_ok storefront=$storefront_ok payment_app=$payment_app_ok"
   sleep "$SLEEP_SECONDS"
 done
 
@@ -39,5 +49,9 @@ fi
 if [[ -f storefront-dev.log ]]; then
   echo "--- storefront dev log (tail) ---"
   tail -80 storefront-dev.log || true
+fi
+if [[ -f dummy-payment-app-dev.log ]]; then
+  echo "--- dummy payment app dev log (tail) ---"
+  tail -80 dummy-payment-app-dev.log || true
 fi
 exit 1

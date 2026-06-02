@@ -11,6 +11,8 @@ fi
 
 cd saleor-platform
 
+node "$ROOT/scripts/patch-saleor-platform-docker.mjs"
+
 echo "==> Pulling Docker images..."
 docker compose pull
 

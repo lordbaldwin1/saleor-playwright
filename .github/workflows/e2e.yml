@@ -39,8 +39,14 @@ jobs:
       - name: Clone Saleor storefront
         run: git clone --depth 1 https://github.com/saleor/storefront.git storefront
 
+      - name: Clone dummy payment app
+        run: git clone --depth 1 https://github.com/saleor/dummy-payment-app.git dummy-payment-app
+
       - name: Configure storefront for local Saleor
         run: npm run storefront:configure
+
+      - name: Configure dummy payment app
+        run: npm run payment-app:configure
 
       - name: Cache storefront pnpm dependencies
         uses: actions/setup-node@v4
@@ -52,6 +58,9 @@ jobs:
       - name: Install storefront dependencies
         run: cd storefront && pnpm install --frozen-lockfile
 
+      - name: Install dummy payment app dependencies
+        run: cd dummy-payment-app && pnpm install --frozen-lockfile
+
       - name: Initialize Saleor (migrate + sample data)
         run: npm run saleor:init
 
@@ -60,6 +69,15 @@ jobs:
 
       - name: Wait for API and Dashboard
         run: bash scripts/wait-for-services.sh
+
+      - name: Start dummy payment app
+        run: bash scripts/start-dummy-payment-app.sh
+
+      - name: Wait for dummy payment app
+        run: WAIT_PAYMENT_APP=1 bash scripts/wait-for-services.sh
+
+      - name: Install dummy payment app in Saleor
+        run: npm run payment-app:install
 
       - name: Start storefront dev server
         run: bash scripts/start-storefront-ci.sh
@@ -88,4 +106,12 @@ jobs:
         with:
           name: storefront-dev-log
           path: storefront-dev.log
+          retention-days: 3
+
+      - name: Upload dummy payment app dev log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dummy-payment-app-dev-log
+          path: dummy-payment-app-dev.log
           retention-days: 3

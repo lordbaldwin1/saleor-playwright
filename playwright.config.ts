@@ -15,6 +15,7 @@ export default defineConfig({
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
+    testIdAttribute: "data-testid",
   },
   projects: [
     {
@@ -50,6 +51,13 @@ export default defineConfig({
           {
             command: "npm run saleor:up:detached",
             url: config.apiHealthUrl,
+            cwd: repoRoot,
+            timeout: 300_000,
+            reuseExistingServer: !process.env.CI,
+          },
+          {
+            command: "bash scripts/payment-app-bootstrap.sh",
+            url: `${config.dummyPaymentAppUrl}/api/manifest`,
             cwd: repoRoot,
             timeout: 300_000,
             reuseExistingServer: !process.env.CI,

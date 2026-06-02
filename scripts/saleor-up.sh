@@ -16,5 +16,6 @@ if [[ ! -f "$ROOT/.saleor-init-done" ]]; then
   bash "$ROOT/scripts/saleor-init.sh"
 fi
 
+node "$ROOT/scripts/patch-saleor-platform-docker.mjs"
 echo "==> Starting Saleor platform (API :8000, Dashboard :9000)..."
 docker compose up

@@ -8,7 +8,10 @@ node_modules/
 .saleor-init-done
 storefront-dev.log
 storefront-dev.pid
+dummy-payment-app-dev.log
+dummy-payment-app-dev.pid
 
 # Cloned Saleor repos (created by npm run setup)
 /saleor-platform/
 /storefront/
+/dummy-payment-app/
