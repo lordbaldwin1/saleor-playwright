@@ -1,0 +1,14 @@
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+.env
+.saleor-init-done
+storefront-dev.log
+storefront-dev.pid
+
+# Cloned Saleor repos (created by npm run setup)
+/saleor-platform/
+/storefront/

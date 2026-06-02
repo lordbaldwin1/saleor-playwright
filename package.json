@@ -1,0 +1,31 @@
+{
+  "name": "saleor-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Playwright E2E tests for local Saleor API, Dashboard, and Storefront",
+  "scripts": {
+    "setup": "bash scripts/setup.sh",
+    "saleor:init": "bash scripts/saleor-init.sh",
+    "saleor:up": "bash scripts/saleor-up.sh",
+    "saleor:up:detached": "bash scripts/saleor-up-detached.sh",
+    "saleor:down": "bash scripts/saleor-down.sh",
+    "storefront:configure": "bash scripts/configure-storefront.sh",
+    "storefront:dev": "bash scripts/storefront-dev.sh",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:storefront": "playwright test --project=storefront",
+    "test:dashboard": "playwright test --project=dashboard",
+    "test:api": "playwright test --project=api",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^22.15.0",
+    "dotenv": "^16.5.0",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
