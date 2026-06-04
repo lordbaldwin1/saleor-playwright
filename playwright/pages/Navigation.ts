@@ -12,6 +12,7 @@ export class Navigation {
   readonly groceriesLink: Locator;
   readonly loginLink: Locator;
   readonly cartLink: Locator;
+  readonly searchInput: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -27,6 +28,7 @@ export class Navigation {
     });
     this.loginLink = this.container.getByRole("link", { name: "Log in" });
     this.cartLink = this.container.getByTestId("CartNavItem");
+    this.searchInput = this.container.getByPlaceholder("Search for products...");
   }
 
   async goto(option: NavigationOptions) {
