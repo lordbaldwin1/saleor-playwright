@@ -16,4 +16,8 @@ export class ProductDetailPage {
     this.addToBagButton = this.page.getByRole("button", { name: "Add to bag" });
     this.price = this.page.locator(".text-2xl.font-semibold.tracking-tight");
   }
+
+  async addToBag() {
+    await this.addToBagButton.click();
+  }
 }

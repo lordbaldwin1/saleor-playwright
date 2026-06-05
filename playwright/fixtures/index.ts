@@ -1,7 +1,8 @@
 import { test as base, expect } from "@playwright/test";
 import { HomePage } from "../pages/HomePage";
 import { ProductsPage } from "../pages/ProductsPage";
-import { testData, TestProduct } from "../helpers/test-data";
+import { CheckoutPage } from "../pages/CheckoutPage";
+import { testData, CheckoutTestData, TestProduct } from "../helpers/test-data";
 import path from "path";
 import fs from "fs";
 import { apiCreateCustomer, apiLoginBrowser } from "../helpers/auth";
@@ -11,9 +12,11 @@ type Fixtures = {
   // e2e fixtures
   homePage: HomePage;
   productsPage: ProductsPage;
+  checkoutPage: CheckoutPage;
   testData: typeof testData;
   testProduct: TestProduct;
   multiVariantTestProduct: TestProduct;
+  checkout: CheckoutTestData;
   // api fixtures
 };
 
@@ -28,6 +31,9 @@ const test = base.extend<Fixtures, WorkerFixtures>({
   productsPage: async ({ page }, use) => {
     await use(new ProductsPage(page));
   },
+  checkoutPage: async ({ page }, use) => {
+    await use(new CheckoutPage(page));
+  },
   testData: async ({}, use) => {
     await use(testData);
   },
@@ -36,6 +42,9 @@ const test = base.extend<Fixtures, WorkerFixtures>({
   },
   multiVariantTestProduct: async ({ testData }, use) => {
     await use(testData.multiVariantTestProduct);
+  },
+  checkout: async ({ testData }, use) => {
+    await use(testData.checkout);
   },
 
   storageState: async ({ workerStorageState }, use) => await use(workerStorageState),

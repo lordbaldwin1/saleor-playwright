@@ -1,11 +1,13 @@
 import { Locator, Page } from "@playwright/test";
 import { SearchPage } from "./SearchPage";
 import { LoginPage } from "./LoginPage";
+import { Cart } from "./Cart";
 
 export type NavigationOptions = "home" | "all" | "apparel" | "accessories" | "groceries" | "login" | "cart";
 
 export class Navigation {
   private readonly page: Page;
+  readonly cart: Cart;
   readonly container: Locator;
   readonly homeLink: Locator;
   readonly allLink: Locator;
@@ -19,6 +21,7 @@ export class Navigation {
 
   constructor(page: Page) {
     this.page = page;
+    this.cart = new Cart(this.page);
     this.container = this.page.locator("header");
     this.homeLink = this.container.getByLabel("Homepage");
     this.allLink = this.container.getByRole("link", { name: "All" });
