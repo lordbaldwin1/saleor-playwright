@@ -1,5 +1,3 @@
-import type { CreditCardDetails, ShippingDetails } from "../pages/CheckoutPage";
-
 export type TestProduct = {
   name: string;
   slug: string;
@@ -7,10 +5,37 @@ export type TestProduct = {
   price?: string;
 };
 
-export type CheckoutTestData = {
+export type ShippingDetails = {
+  email: string;
+  country: string;
+  firstName: string;
+  lastName: string;
+  streetAddress: string;
+  city: string;
+  state?: string;
+  company?: string;
+  streetAddress2?: string;
+  postalCode?: string;
+  phone?: string;
+};
+
+export type CreditCardDetails = {
+  cardNumber: string;
+  expiry: string;
+  cvc: string;
+  nameOnCard: string;
+};
+
+export type CheckoutData = {
   shipping: ShippingDetails;
   creditCard: CreditCardDetails;
   shippingMethod: string;
+};
+
+export type TestData = {
+  testProduct: TestProduct;
+  multiVariantTestProduct: TestProduct;
+  checkout: CheckoutData;
 };
 
 export const testData = {
@@ -19,12 +44,12 @@ export const testData = {
     slug: "grey-hoodie",
     searchQuery: "Hoodie",
     price: "30.00",
-  } satisfies TestProduct,
+  },
   multiVariantTestProduct: {
     name: "White Plimsolls",
     slug: "white-plimsolls",
     searchQuery: "Plimsolls",
-  } satisfies TestProduct,
+  },
   checkout: {
     shipping: {
       email: "test@example.com",
@@ -43,5 +68,5 @@ export const testData = {
       nameOnCard: "John Doe",
     },
     shippingMethod: "Default",
-  } satisfies CheckoutTestData,
-};
+  },
+} satisfies TestData;

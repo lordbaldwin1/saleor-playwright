@@ -2,7 +2,7 @@ import { test as base, expect } from "@playwright/test";
 import { HomePage } from "../pages/HomePage";
 import { ProductsPage } from "../pages/ProductsPage";
 import { CheckoutPage } from "../pages/CheckoutPage";
-import { testData, CheckoutTestData, TestProduct } from "../helpers/test-data";
+import { testData, type CheckoutData, type TestProduct } from "../helpers/test-data";
 import path from "path";
 import fs from "fs";
 import { apiCreateCustomer, apiLoginBrowser } from "../helpers/auth";
@@ -16,7 +16,7 @@ type Fixtures = {
   testData: typeof testData;
   testProduct: TestProduct;
   multiVariantTestProduct: TestProduct;
-  checkout: CheckoutTestData;
+  checkout: CheckoutData;
   // api fixtures
 };
 

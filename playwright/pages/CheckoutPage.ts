@@ -1,27 +1,7 @@
-import { expect, Locator, Page } from "@playwright/test";
+import { Locator, Page } from "@playwright/test";
+import type { CreditCardDetails, ShippingDetails } from "../helpers/test-data";
 import { Navigation } from "./Navigation";
 import { OrderConfirmationPage } from "./OrderConfirmationPage";
-
-export type ShippingDetails = {
-  email: string;
-  country: string;
-  firstName: string;
-  lastName: string;
-  streetAddress: string;
-  city: string;
-  state?: string;
-  company?: string;
-  streetAddress2?: string;
-  postalCode?: string;
-  phone?: string;
-};
-
-export type CreditCardDetails = {
-  cardNumber: string;
-  expiry: string;
-  cvc: string;
-  nameOnCard: string;
-};
 
 export class CheckoutPage {
   private readonly page: Page;
