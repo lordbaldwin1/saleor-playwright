@@ -112,6 +112,83 @@ async function ensureChannelChargeStrategy(token) {
   console.log(`Set ${defaultChannel} defaultTransactionFlowStrategy to CHARGE`);
 }
 
+const LEGACY_DUMMY_PLUGIN_ID = "mirumee.payments.dummy";
+
+async function disableLegacyDummyPlugin(token) {
+  const channelsData = await gql(
+    `query Channels {
+      channels {
+        id
+        slug
+      }
+    }`,
+    undefined,
+    token,
+  );
+
+  const channel = channelsData.channels.find((c) => c.slug === defaultChannel);
+  if (!channel) {
+    console.warn(`Channel "${defaultChannel}" not found — skipping legacy dummy plugin disable`);
+    return;
+  }
+
+  const pluginData = await gql(
+    `query Plugin($id: ID!) {
+      plugin(id: $id) {
+        id
+        channelConfigurations {
+          channel { slug }
+          active
+        }
+      }
+    }`,
+    { id: LEGACY_DUMMY_PLUGIN_ID },
+    token,
+  );
+
+  const plugin = pluginData.plugin;
+  if (!plugin) {
+    return;
+  }
+
+  const channelConfig = plugin.channelConfigurations.find(
+    (config) => config.channel.slug === defaultChannel,
+  );
+  if (!channelConfig?.active) {
+    console.log(`Legacy dummy plugin already disabled on "${defaultChannel}"`);
+    return;
+  }
+
+  const updateData = await gql(
+    `mutation PluginUpdate($channelId: ID!, $id: ID!, $input: PluginUpdateInput!) {
+      pluginUpdate(channelId: $channelId, id: $id, input: $input) {
+        plugin {
+          channelConfigurations {
+            channel { slug }
+            active
+          }
+        }
+        errors { message }
+      }
+    }`,
+    {
+      channelId: channel.id,
+      id: LEGACY_DUMMY_PLUGIN_ID,
+      input: { active: false },
+    },
+    token,
+  );
+
+  if (updateData.pluginUpdate.errors.length) {
+    console.warn(
+      `Could not disable legacy dummy plugin on ${defaultChannel}: ${updateData.pluginUpdate.errors.map((e) => e.message).join("; ")}`,
+    );
+    return;
+  }
+
+  console.log(`Disabled legacy "${LEGACY_DUMMY_PLUGIN_ID}" plugin on "${defaultChannel}"`);
+}
+
 async function main() {
   await waitForManifest();
 
@@ -147,6 +224,7 @@ async function main() {
   if (existing) {
     console.log(`Dummy payment app already installed and active (${existing.node.id})`);
     await ensureChannelChargeStrategy(token);
+    await disableLegacyDummyPlugin(token);
     return;
   }
 
@@ -230,6 +308,7 @@ async function main() {
     if (status === "SUCCESS") {
       console.log("Dummy payment app installed successfully");
       await ensureChannelChargeStrategy(token);
+      await disableLegacyDummyPlugin(token);
       return;
     }
     if (status === "FAILED") {
@@ -253,6 +332,7 @@ async function main() {
       if (installed) {
         console.log(`Dummy payment app installed successfully (${installed.node.id})`);
         await ensureChannelChargeStrategy(token);
+        await disableLegacyDummyPlugin(token);
         return;
       }
     }

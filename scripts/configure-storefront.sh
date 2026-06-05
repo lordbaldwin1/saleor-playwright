@@ -32,3 +32,4 @@ if ! grep -q '^NEXT_PUBLIC_DEFAULT_CHANNEL=' storefront/.env 2>/dev/null; then
 fi
 
 node scripts/patch-storefront-next-config.mjs
+node scripts/patch-storefront-payment-step.mjs

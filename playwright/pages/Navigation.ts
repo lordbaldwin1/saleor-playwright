@@ -1,4 +1,6 @@
 import { Locator, Page } from "@playwright/test";
+import { SearchPage } from "./SearchPage";
+import { LoginPage } from "./LoginPage";
 
 export type NavigationOptions = "home" | "all" | "apparel" | "accessories" | "groceries" | "login" | "cart";
 
@@ -11,6 +13,7 @@ export class Navigation {
   readonly accessoriesLink: Locator;
   readonly groceriesLink: Locator;
   readonly loginLink: Locator;
+  readonly userButton: Locator;
   readonly cartLink: Locator;
   readonly searchInput: Locator;
 
@@ -27,6 +30,7 @@ export class Navigation {
       name: "Groceries",
     });
     this.loginLink = this.container.getByRole("link", { name: "Log in" });
+    this.userButton = this.container.getByRole("button", { name: /Open user menu/ });
     this.cartLink = this.container.getByTestId("CartNavItem");
     this.searchInput = this.container.getByPlaceholder("Search for products...");
   }
@@ -78,9 +82,16 @@ export class Navigation {
 
   async goToLogin() {
     await this.loginLink.click();
+    return new LoginPage(this.page);
   }
 
   async goToCart() {
     await this.cartLink.click();
+  }
+
+  async search(query: string) {
+    await this.searchInput.fill(query);
+    await this.searchInput.press("Enter");
+    return new SearchPage(this.page);
   }
 }

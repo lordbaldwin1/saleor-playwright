@@ -18,13 +18,24 @@ export default defineConfig({
     testIdAttribute: "data-testid",
   },
   projects: [
+    // {
+    //   name: "storefront-setup",
+    //   testDir: "./playwright/tests/storefront",
+    //   testMatch: /auth\.setup\.ts/,
+    //   use: {
+    //     ...devices["Desktop Chrome"],
+    //     baseURL: config.storefrontUrl,
+    //   },
+    // },
     {
       name: "storefront",
       testDir: "./playwright/tests/storefront",
+      testIgnore: /auth\.setup\.ts/,
       use: {
         ...devices["Desktop Chrome"],
         baseURL: config.storefrontUrl,
       },
+      // dependencies: ['storefront-setup'],
     },
     {
       name: "dashboard",

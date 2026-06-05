@@ -1,6 +1,8 @@
 import { test, expect } from "../../fixtures";
 import { NavigationOptions } from "../../pages/Navigation";
 
+test.use({ storageState: { cookies: [], origins: [] } });
+
 type NavigationTestCase = {
   option: NavigationOptions;
   expectedUrl: string;
@@ -38,7 +40,7 @@ test.describe("Navigation", () => {
     test(`Navigation to ${testCase.option}`, async ({ homePage, page }) => {
       await homePage.goto();
       await expect(homePage.navigation.container).toBeVisible();
-      
+
       await homePage.navigation.goto(testCase.option);
       await expect(page).toHaveURL(testCase.expectedUrl);
     });

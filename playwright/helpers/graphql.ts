@@ -1,4 +1,5 @@
 import type { APIRequestContext } from "@playwright/test";
+import { config } from "../config";
 
 export type GraphQLResponse<T> = {
   data?: T;
@@ -11,7 +12,7 @@ export async function gql<T>(
   query: string,
   variables?: Record<string, unknown>,
 ): Promise<GraphQLResponse<T>> {
-  const response = await request.post("", {
+  const response = await request.post(config.apiUrl, {
     data: { query, variables },
   });
   return response.json() as Promise<GraphQLResponse<T>>;
