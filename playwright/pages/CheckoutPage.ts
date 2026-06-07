@@ -130,7 +130,7 @@ export class CheckoutPage {
     this.orderSummarySubtotal = this.costBreakdown.locator("div").filter({ hasText: "Subtotal" });
     this.orderSummaryShipping = this.costBreakdown.locator("div").filter({ hasText: "Shipping" });
     this.orderSummaryDiscount = this.costBreakdown.locator("div").filter({ hasText: "Discount" });
-    this.orderSummaryTotal = this.orderSummary.locator("div.border-border/50.mt-4.flex");
+    this.orderSummaryTotal = this.orderSummary.locator("div.border-border\\/50.mt-4.flex");
   }
 
   async fillShippingForm(details: ShippingDetails) {
