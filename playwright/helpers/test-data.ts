@@ -104,7 +104,7 @@ export const testData = {
     },
     shippingMethod: "Default",
   },
-  voucherCode: {
+  voucherCode: { // sample voucher PW-1780794899003
     code: `PW-${Date.now()}`,
     discountValue: 10,
   },

@@ -6,6 +6,8 @@ import { OrderConfirmationPage } from "./OrderConfirmationPage";
 export class CheckoutPage {
   private readonly page: Page;
   readonly navigation: Navigation;
+  
+  // shipping form
   readonly contactInput: Locator;
   readonly shippingCountryRegionSelect: Locator;
   readonly shippingFirstNameInput: Locator;
@@ -18,13 +20,17 @@ export class CheckoutPage {
   readonly shippingStateSelect: Locator;
   readonly shippingPhoneInput: Locator;
   readonly continueToShippingButton: Locator;
+
+  // shipping method
   readonly contactSummary: Locator;
   readonly shipToSummary: Locator;
   readonly shippingMethodHeading: Locator;
   readonly continueToPaymentButton: Locator;
   readonly returnToInformationButton: Locator;
-  readonly shippingMethodSummary: Locator;
   readonly shippingMethodRadioButtons: Locator;
+  readonly shippingMethodSummary: Locator;
+
+  // payment
   readonly paymentHeading: Locator;
   readonly creditCardRadio: Locator;
   readonly cardNumberInput: Locator;
@@ -33,13 +39,23 @@ export class CheckoutPage {
   readonly cardNameInput: Locator;
   readonly payButton: Locator;
   readonly returnToShippingButton: Locator;
+
+  // order summary
+  readonly orderSummary: Locator;
   readonly voucherCodeInput: Locator;
   readonly applyVoucherButton: Locator;
-  readonly orderSummary: Locator;
+  readonly validVoucherCard: Locator;
+  readonly costBreakdown: Locator;
+  readonly orderSummarySubtotal: Locator;
+  readonly orderSummaryShipping: Locator;
+  readonly orderSummaryDiscount: Locator;
+  readonly orderSummaryTotal: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.navigation = new Navigation(this.page);
+
+    // shipping form
     this.contactInput = this.page.getByPlaceholder("Email address");
     this.shippingCountryRegionSelect = this.page.getByLabel("Country/Region");
     this.shippingFirstNameInput = this.page.getByLabel("First name");
@@ -50,12 +66,14 @@ export class CheckoutPage {
       /Apartment, suite, etc\./,
     );
     this.shippingCityInput = this.page.getByLabel("City");
-    this.shippingPostalCodeInput = this.page.getByLabel(/code/);
+    this.shippingPostalCodeInput = this.page.getByLabel(/(zip|postal)\s*code/i);
     this.shippingStateSelect = this.page.getByLabel("State");
     this.shippingPhoneInput = this.page.getByLabel(/Phone number/);
     this.continueToShippingButton = this.page.getByRole("button", {
       name: "Continue to shipping",
     });
+
+    // shipping method
     this.contactSummary = this.page
       .locator("div")
       .filter({ has: this.page.getByText("Contact", { exact: true }) })
@@ -80,6 +98,8 @@ export class CheckoutPage {
     this.shippingMethodRadioButtons = this.page.locator(
       "label.flex.cursor-pointer",
     );
+
+    // payment
     this.paymentHeading = this.page.getByRole("heading", { name: "Payment" });
     this.creditCardRadio = this.page.getByRole("radio", {
       name: "Credit card",
@@ -92,18 +112,25 @@ export class CheckoutPage {
     this.returnToShippingButton = this.page.getByRole("button", {
       name: "Return to shipping",
     });
+
+    // order summary
     this.orderSummary = this.page
       .getByRole("article")
       .filter({
+        visible: true,
         has: this.page.getByRole("heading", { name: "Order Summary" }),
-      })
-      .filter({ visible: true });
-    this.voucherCodeInput = this.orderSummary
-      .getByPlaceholder("Discount code")
+      });
+    this.voucherCodeInput = this.orderSummary.getByPlaceholder("Discount code");
     this.applyVoucherButton = this.orderSummary.getByRole("button", {
       name: "Apply",
       exact: true,
     });
+    this.validVoucherCard = this.orderSummary.locator(".flex.items-center.gap-3.rounded-lg");
+    this.costBreakdown = this.orderSummary.locator("dl");
+    this.orderSummarySubtotal = this.costBreakdown.locator("div").filter({ hasText: "Subtotal" });
+    this.orderSummaryShipping = this.costBreakdown.locator("div").filter({ hasText: "Shipping" });
+    this.orderSummaryDiscount = this.costBreakdown.locator("div").filter({ hasText: "Discount" });
+    this.orderSummaryTotal = this.orderSummary.locator("div.border-border/50.mt-4.flex");
   }
 
   async fillShippingForm(details: ShippingDetails) {
@@ -141,6 +168,11 @@ export class CheckoutPage {
     await this.shippingMethodRadioButtons.first().click();
   }
 
+  async selectFirstEMSShippingMethod() {
+    const emsShippingRows = this.shippingMethodRadioButtons.filter({ hasText: "EMS" });
+    await emsShippingRows.first().click();
+  }
+
   async continueToPayment() {
     await this.continueToPaymentButton.click();
   }
@@ -151,6 +183,24 @@ export class CheckoutPage {
     await this.cardExpiryInput.fill(details.expiry);
     await this.cardCvcInput.fill(details.cvc);
     await this.cardNameInput.fill(details.nameOnCard);
+  }
+
+  async getOrderSummarySubtotalAmount() {
+    const amountString = await this.orderSummarySubtotal.locator("dd").textContent();
+    const value = amountString?.split("$")[1];
+    if (!value) {
+      throw new Error("Subtotal amount not found");
+    }
+    return parseFloat(value);
+  }
+
+  async getOrderSummaryTotalAmount() {
+    const amountString = await this.orderSummaryTotal.locator("data").textContent();
+    const value = amountString?.split("$")[1];
+    if (!value) {
+      throw new Error("Total amount not found");
+    }
+    return parseFloat(value);
   }
 
   async pay() {
