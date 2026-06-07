@@ -1,14 +1,14 @@
 import { Locator, Page } from "@playwright/test";
 import { Navigation } from "./Navigation";
+import { BasePage } from "./BasePage";
 
-export class SearchPage {
-  private readonly page: Page;
+export class SearchPage extends BasePage {
   readonly navigation: Navigation;
   readonly resultsText: Locator;
   readonly searchResults: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.navigation = new Navigation(this.page);
     this.resultsText = this.page.getByText(/Results for/);
     this.searchResults = this.page.locator(".grid.grid-cols-1.gap-8 > li");

@@ -1,11 +1,10 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { Navigation } from "./Navigation";
 import { ProductDetailPage } from "./ProductDetailPage";
-import { config } from "../config";
+import { BasePage } from "./BasePage";
 
 
-export class ProductsPage {
-  private readonly page: Page;
+export class ProductsPage extends BasePage {
   readonly navigation: Navigation;
   readonly productListContainer: Locator;
   readonly productCards: Locator;
@@ -13,7 +12,7 @@ export class ProductsPage {
   readonly previousPageButton: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.navigation = new Navigation(this.page);
     this.productListContainer = this.page.locator(".grid.w-full.grid-cols-2");
     this.productCards = this.productListContainer.locator(".group");

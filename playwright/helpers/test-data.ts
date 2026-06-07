@@ -28,10 +28,12 @@ export type CreditCardDetails = {
   nameOnCard: string;
 };
 
+export type ShippingMethods = "Default" | "EMS" | "FedEx" | "UPS" | "DHL";
+
 export type CheckoutData = {
   shipping: ShippingDetails;
   creditCard: CreditCardDetails;
-  shippingMethod: string;
+  shippingMethod: ShippingMethods;
 };
 
 export type NavigationTestCase = {
@@ -70,6 +72,7 @@ export type TestData = {
   testProduct: TestProduct;
   multiVariantTestProduct: TestProduct;
   guestCheckout: CheckoutData;
+  guestCheckoutNonDefaultShippingMethod: CheckoutData;
   voucherCode: { code: string; discountValue: number };
 };
 
@@ -103,6 +106,25 @@ export const testData = {
       nameOnCard: "John Doe",
     },
     shippingMethod: "Default",
+  },
+  guestCheckoutNonDefaultShippingMethod: {
+    shipping: {
+      email: "test@example.com",
+      country: "US",
+      firstName: "John",
+      lastName: "Doe",
+      streetAddress: "123 Main St",
+      city: "Portland",
+      postalCode: "97015",
+      state: "Oregon",
+    },
+    creditCard: {
+      cardNumber: "4242424242424242",
+      expiry: "12/34",
+      cvc: "123",
+      nameOnCard: "John Doe",
+    },
+    shippingMethod: "FedEx",
   },
   voucherCode: { // sample voucher PW-1780794899003
     code: `PW-${Date.now()}`,

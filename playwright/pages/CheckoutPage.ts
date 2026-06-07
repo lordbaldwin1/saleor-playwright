@@ -1,10 +1,10 @@
 import { Locator, Page } from "@playwright/test";
-import type { CreditCardDetails, ShippingDetails } from "../helpers/test-data";
+import type { CreditCardDetails, ShippingDetails, ShippingMethods } from "../helpers/test-data";
 import { Navigation } from "./Navigation";
 import { OrderConfirmationPage } from "./OrderConfirmationPage";
+import { BasePage } from "./BasePage";
 
-export class CheckoutPage {
-  private readonly page: Page;
+export class CheckoutPage extends BasePage {
   readonly navigation: Navigation;
   
   // shipping form
@@ -27,7 +27,7 @@ export class CheckoutPage {
   readonly shippingMethodHeading: Locator;
   readonly continueToPaymentButton: Locator;
   readonly returnToInformationButton: Locator;
-  readonly shippingMethodRadioButtons: Locator;
+  readonly shippingMethods: Locator;
   readonly shippingMethodSummary: Locator;
 
   // payment
@@ -41,6 +41,7 @@ export class CheckoutPage {
   readonly returnToShippingButton: Locator;
 
   // order summary
+  readonly mobileOrderSummaryExpandButton: Locator;
   readonly orderSummary: Locator;
   readonly voucherCodeInput: Locator;
   readonly applyVoucherButton: Locator;
@@ -52,7 +53,7 @@ export class CheckoutPage {
   readonly orderSummaryTotal: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.navigation = new Navigation(this.page);
 
     // shipping form
@@ -75,11 +76,11 @@ export class CheckoutPage {
 
     // shipping method
     this.contactSummary = this.page
-      .locator("div")
+      .locator("div.flex.items-start.gap-4.p-4")
       .filter({ has: this.page.getByText("Contact", { exact: true }) })
       .locator("span.break-words");
     this.shipToSummary = this.page
-      .locator("div")
+      .locator("div.flex.items-start.gap-4.p-4")
       .filter({ has: this.page.getByText("Ship to", { exact: true }) })
       .locator("span.break-words");
     this.shippingMethodHeading = this.page.getByRole("heading", {
@@ -92,10 +93,10 @@ export class CheckoutPage {
       name: "Return to information",
     });
     this.shippingMethodSummary = this.page
-      .locator("div")
+      .locator("div.flex.items-start.gap-4.p-4")
       .filter({ has: this.page.getByText("Method", { exact: true }) })
       .locator("span.break-words");
-    this.shippingMethodRadioButtons = this.page.locator(
+    this.shippingMethods = this.page.locator(
       "label.flex.cursor-pointer",
     );
 
@@ -114,6 +115,7 @@ export class CheckoutPage {
     });
 
     // order summary
+    this.mobileOrderSummaryExpandButton = this.page.getByRole("button", { name: /(Show|Hide) order summary/ });
     this.orderSummary = this.page
       .getByRole("article")
       .filter({
@@ -165,12 +167,26 @@ export class CheckoutPage {
   }
 
   async selectDefaultShippingMethod() {
-    await this.shippingMethodRadioButtons.first().click();
+    await this.shippingMethods.first().click();
   }
 
-  async selectFirstEMSShippingMethod() {
-    const emsShippingRows = this.shippingMethodRadioButtons.filter({ hasText: "EMS" });
-    await emsShippingRows.first().click();
+  async selectShippingMethod(method: ShippingMethods) {
+    const shippingRows = this.shippingMethods.filter({ hasText: method });
+    const firstShippingRow = shippingRows.first();
+    await firstShippingRow.click();
+
+    // get and return shipping cost
+    const shippingCost = await firstShippingRow.locator("span").filter({
+      hasText: /^\$\d+\.\d{2}$/
+    }).textContent();
+    if (!shippingCost) {
+      throw new Error(`Shipping cost text not found for method: ${method}`);
+    }
+    const value = shippingCost.split("$")[1];
+    if (!value) {
+      throw new Error(`Shipping cost not found for method: ${method}`);
+    }
+    return parseFloat(value);
   }
 
   async continueToPayment() {
@@ -194,6 +210,15 @@ export class CheckoutPage {
     return parseFloat(value);
   }
 
+  async getOrderSummaryShippingAmount() {
+    const amountString = await this.orderSummaryShipping.locator("dd").textContent();
+    const value = amountString?.split("$")[1];
+    if (!value) {
+      throw new Error("Shipping amount not found");
+    }
+    return parseFloat(value);
+  }
+
   async getOrderSummaryTotalAmount() {
     const amountString = await this.orderSummaryTotal.locator("data").textContent();
     const value = amountString?.split("$")[1];
@@ -201,6 +226,15 @@ export class CheckoutPage {
       throw new Error("Total amount not found");
     }
     return parseFloat(value);
+  }
+
+  async applyVoucherCode(code: string) {
+    await this.voucherCodeInput.fill(code);
+    await this.applyVoucherButton.click();
+  }
+
+  async toggleMobileOrderSummary() {
+    await this.mobileOrderSummaryExpandButton.click();
   }
 
   async pay() {

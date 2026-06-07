@@ -38,6 +38,16 @@ export default defineConfig({
       },
       dependencies: ['storefront-setup'],
     },
+    {
+      name: "storefront-mobile",
+      testDir: "./playwright/tests/storefront",
+      testIgnore: /auth\.setup\.ts/,
+      use: {
+        ...devices["iPhone 13"],
+        baseURL: config.storefrontUrl,
+      },
+      dependencies: ['storefront-setup'],
+    }
     // {
     //   name: "dashboard",
     //   testDir: "./playwright/tests/dashboard",

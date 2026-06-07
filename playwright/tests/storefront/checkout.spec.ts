@@ -68,7 +68,7 @@ test.describe("Guest checkout", () => {
     productsPage,
     voucherCode,
     testProduct,
-    guestCheckout,
+    guestCheckoutNonDefaultShippingMethod: checkoutData,
   }) => {
     await productsPage.goto();
     const productDetailPage =
@@ -84,32 +84,71 @@ test.describe("Guest checkout", () => {
     const checkoutPage = await productDetailPage.navigation.cart.checkout();
     await expect(checkoutPage.contactInput).toBeVisible();
 
-    await checkoutPage.fillShippingForm(guestCheckout.shipping);
+    await checkoutPage.fillShippingForm(checkoutData.shipping);
     await expect(checkoutPage.continueToShippingButton).toBeEnabled();
     await checkoutPage.continueToShipping();
     await expect(checkoutPage.shippingMethodHeading).toBeVisible();
 
-    await checkoutPage.selectFirstEMSShippingMethod();
-    await expect(checkoutPage.continueToPaymentButton).toBeEnabled();
-    await checkoutPage.continueToPayment();
-
     // discount code & shipping cost
+    if (await checkoutPage.isMobile()) {
+      await checkoutPage.toggleMobileOrderSummary();
+    }
     const originalOrderSubtotalCost =
       await checkoutPage.getOrderSummarySubtotalAmount();
     const originalOrderTotalCost =
       await checkoutPage.getOrderSummaryTotalAmount();
+    const shippingCost = await checkoutPage.selectShippingMethod(checkoutData.shippingMethod);
+    await expect(checkoutPage.continueToPaymentButton).toBeEnabled();
 
+    await checkoutPage.continueToPayment();
+    await expect(checkoutPage.paymentHeading).toBeVisible();
+
+    if (await checkoutPage.isMobile()) {
+      await checkoutPage.toggleMobileOrderSummary();
+    }
     await expect(checkoutPage.voucherCodeInput).toBeVisible();
-    await checkoutPage.voucherCodeInput.fill(voucherCode.code);
-    await checkoutPage.applyVoucherButton.click();
+    await checkoutPage.applyVoucherCode(voucherCode.code);
     await expect(checkoutPage.validVoucherCard).toBeVisible();
+
+    // order summary checks
+    const finalOrderSubtotalCost =
+      await checkoutPage.getOrderSummarySubtotalAmount();
+    const finalOrderTotalCost = await checkoutPage.getOrderSummaryTotalAmount();
+    expect(finalOrderSubtotalCost).toBe(
+      originalOrderSubtotalCost - voucherCode.discountValue,
+    );
+    expect(finalOrderTotalCost).toBe(
+      originalOrderTotalCost - voucherCode.discountValue + shippingCost,
+    );
     await expect(checkoutPage.orderSummaryDiscount).toContainText(
       `-$${voucherCode.discountValue}`,
     );
 
-    // notes for when I return to this:
-    // check that subtotal cost goes down by discount value
-    // check that total cost goes down by discount value but up by shipping cost
-    // get shipping cost from shipping method row and check that order summary is accurate?
+    // payment page checks
+    await expect(checkoutPage.contactSummary).toContainText(checkoutData.shipping.email);
+    await expect(checkoutPage.shipToSummary).toContainText(checkoutData.shipping.streetAddress);
+    await expect(checkoutPage.shipToSummary).toContainText(checkoutData.shipping.city, { ignoreCase: true });
+    await expect(checkoutPage.shipToSummary).toContainText(checkoutData.shipping.postalCode!);
+    await expect(checkoutPage.shippingMethodSummary).toContainText(checkoutData.shippingMethod);
+
+    await checkoutPage.fillCreditCardForm(checkoutData.creditCard);
+    await expect(checkoutPage.payButton).toBeEnabled();
+    const confirmationPage = await checkoutPage.pay();
+
+    await expect(confirmationPage.thankYouHeading).toBeVisible();
+    await expect(confirmationPage.orderNumber).toHaveText(/^Order #\d+$/);
+    await expect(confirmationPage.confirmationEmail).toHaveText(checkoutData.shipping.email);
+    await expect(confirmationPage.shippingAddress).toContainText(checkoutData.shipping.streetAddress);
+    await expect(confirmationPage.shippingAddress).toContainText(checkoutData.shipping.city, { ignoreCase: true });
+    await expect(confirmationPage.shippingAddress).toContainText(checkoutData.shipping.postalCode!);
+
+    await expect(confirmationPage.billingAddress).toContainText(checkoutData.shipping.streetAddress);
+    await expect(confirmationPage.billingAddress).toContainText(checkoutData.shipping.city, { ignoreCase: true });
+    await expect(confirmationPage.billingAddress).toContainText(checkoutData.shipping.postalCode!);
+    await expect(confirmationPage.estimatedDelivery).toBeVisible();
+
+    const homePage = await confirmationPage.continueShopping();
+    await expect(homePage.productList).toBeVisible();
+    await expect(homePage.navigation.cartLink).toContainText("0");
   });
 });

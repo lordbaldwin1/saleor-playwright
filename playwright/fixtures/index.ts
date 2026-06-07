@@ -24,6 +24,7 @@ type Fixtures = {
   testProduct: TestProduct;
   multiVariantTestProduct: TestProduct;
   guestCheckout: CheckoutData;
+  guestCheckoutNonDefaultShippingMethod: CheckoutData;
   // api fixtures
   authenticatedRequest: APIRequestContext;
   voucherCode: { code: string; discountValue: number };
@@ -86,7 +87,10 @@ const test = base.extend<Fixtures, WorkerFixtures>({
   guestCheckout: async ({ testData }, use) => {
     await use(testData.guestCheckout);
   },
-
+  guestCheckoutNonDefaultShippingMethod: async ({ testData }, use) => {
+    await use(testData.guestCheckoutNonDefaultShippingMethod);
+  },
+  
   authenticatedRequest: async ({ request }, use) => {
     const authenticatedRequest = await apiLoginRequest(
       request,
