@@ -2,11 +2,15 @@ import { test as base, expect } from "@playwright/test";
 import { HomePage } from "../pages/HomePage";
 import { ProductsPage } from "../pages/ProductsPage";
 import { CheckoutPage } from "../pages/CheckoutPage";
-import { testData, type CheckoutData, type TestProduct } from "../helpers/test-data";
-import path from "path";
-import fs from "fs";
-import { apiCreateCustomer, apiLoginBrowser } from "../helpers/auth";
-import { config } from "../config";
+import {
+  testData,
+  type CheckoutData,
+  type TestProduct,
+} from "../helpers/test-data";
+// import path from "path";
+// import fs from "fs";
+// import { apiCreateCustomer, apiLoginBrowser } from "../helpers/auth";
+// import { config } from "../config";
 
 type Fixtures = {
   // e2e fixtures
@@ -16,7 +20,7 @@ type Fixtures = {
   testData: typeof testData;
   testProduct: TestProduct;
   multiVariantTestProduct: TestProduct;
-  checkout: CheckoutData;
+  guestCheckout: CheckoutData;
   // api fixtures
 };
 
@@ -25,6 +29,37 @@ type WorkerFixtures = {
 };
 
 const test = base.extend<Fixtures, WorkerFixtures>({
+  // storageState: async ({ workerStorageState }, use) =>
+  //   await use(workerStorageState),
+
+  // workerStorageState: [
+  //   async ({ browser }, use) => {
+  //     const id = test.info().parallelIndex;
+  //     const authDir = path.resolve(config.authDir);
+  //     const fileName = path.join(authDir, `storage-${id}.json`);
+
+  //     fs.mkdirSync(authDir, { recursive: true });
+
+  //     if (fs.existsSync(fileName)) {
+  //       await use(fileName);
+  //       return;
+  //     }
+
+  //     const page = await browser.newPage({ storageState: undefined });
+  //     const email = `worker-${id}@example.com`;
+  //     const password = "password";
+
+  //     await apiCreateCustomer(page.request, email, password);
+  //     await apiLoginBrowser(page, email, password);
+  //     await page.goto("/default-channel");
+  //     await expect(page.getByRole("button", { name: /Open user menu/ })).toBeVisible();
+  //     await page.context().storageState({ path: fileName });
+  //     await page.close();
+  //     await use(fileName);
+  //   },
+  //   { scope: "worker" },
+  // ],
+
   homePage: async ({ page }, use) => {
     await use(new HomePage(page));
   },
@@ -43,37 +78,9 @@ const test = base.extend<Fixtures, WorkerFixtures>({
   multiVariantTestProduct: async ({ testData }, use) => {
     await use(testData.multiVariantTestProduct);
   },
-  checkout: async ({ testData }, use) => {
-    await use(testData.checkout);
+  guestCheckout: async ({ testData }, use) => {
+    await use(testData.guestCheckout);
   },
-
-  storageState: async ({ workerStorageState }, use) => await use(workerStorageState),
-
-  workerStorageState: [
-    async ({ browser }, use) => {
-      const id = test.info().parallelIndex;
-      const authDir = path.resolve(config.authDir);
-      const fileName = path.join(authDir, `storage-${id}.json`);
-
-      fs.mkdirSync(authDir, { recursive: true });
-
-      if (fs.existsSync(fileName)) {
-        await use(fileName);
-        return;
-      }
-
-      const page = await browser.newPage({ storageState: undefined });
-      const email = `worker-${id}@example.com`;
-      const password = "password";
-
-      await apiCreateCustomer(page.request, email, password);
-      await apiLoginBrowser(page, email, password);
-      await page.context().storageState({ path: fileName });
-      await page.close();
-      await use(fileName);
-    },
-    { scope: "worker" },
-  ],
 });
 
 export { test, expect };

@@ -1,3 +1,5 @@
+import { NavigationOptions } from "../pages/Navigation";
+
 export type TestProduct = {
   name: string;
   slug: string;
@@ -32,10 +34,42 @@ export type CheckoutData = {
   shippingMethod: string;
 };
 
+export type NavigationTestCase = {
+  option: NavigationOptions;
+  expectedUrl: string;
+};
+
+export const navigationTestCases: NavigationTestCase[] = [
+  {
+    option: "home",
+    expectedUrl: "/default-channel",
+  },
+  {
+    option: "all",
+    expectedUrl: "/default-channel/products",
+  },
+  {
+    option: "apparel",
+    expectedUrl: "/default-channel/categories/apparel",
+  },
+  {
+    option: "accessories",
+    expectedUrl: "/default-channel/categories/accessories",
+  },
+  {
+    option: "groceries",
+    expectedUrl: "/default-channel/categories/groceries",
+  },
+  {
+    option: "login",
+    expectedUrl: "/default-channel/login",
+  },
+];
+
 export type TestData = {
   testProduct: TestProduct;
   multiVariantTestProduct: TestProduct;
-  checkout: CheckoutData;
+  guestCheckout: CheckoutData;
 };
 
 export const testData = {
@@ -50,7 +84,7 @@ export const testData = {
     slug: "white-plimsolls",
     searchQuery: "Plimsolls",
   },
-  checkout: {
+  guestCheckout: {
     shipping: {
       email: "test@example.com",
       country: "US",

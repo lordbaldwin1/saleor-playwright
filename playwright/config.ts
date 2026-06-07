@@ -22,4 +22,6 @@ export const config = {
   storefrontCustomerAuthFile: "playwright/.auth/user.json",
   dashboardAuthFile: "playwright/.auth/dashboard.json",
   startServers: process.env.E2E_START_SERVERS === "1",
+  customerPassword: process.env.CUSTOMER_PASSWORD ?? "testpassword",
+  globalCustomerEmail: `test-${Date.now() % 1000000}@example.com`,
 } as const;

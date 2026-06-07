@@ -1,5 +1,6 @@
 import { Locator, Page } from "@playwright/test";
 import { Navigation } from "./Navigation";
+import { config } from "../config";
 
 
 export class HomePage {
@@ -16,6 +17,6 @@ export class HomePage {
   }
 
   async goto() {
-    await this.page.goto("/");
+    await this.page.goto("/default-channel");
   }
 }

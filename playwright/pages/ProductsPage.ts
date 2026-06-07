@@ -1,6 +1,7 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { Navigation } from "./Navigation";
 import { ProductDetailPage } from "./ProductDetailPage";
+import { config } from "../config";
 
 
 export class ProductsPage {
@@ -21,7 +22,7 @@ export class ProductsPage {
   }
 
   async goto() {
-    await this.page.goto("/default-channel/products");
+    await this.page.goto(`/default-channel/products`);
   }
 
   async navigateToFirstProductDetailPage() { 

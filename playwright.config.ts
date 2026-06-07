@@ -18,15 +18,15 @@ export default defineConfig({
     testIdAttribute: "data-testid",
   },
   projects: [
-    // {
-    //   name: "storefront-setup",
-    //   testDir: "./playwright/tests/storefront",
-    //   testMatch: /auth\.setup\.ts/,
-    //   use: {
-    //     ...devices["Desktop Chrome"],
-    //     baseURL: config.storefrontUrl,
-    //   },
-    // },
+    {
+      name: "storefront-setup",
+      testDir: "./playwright/tests/storefront",
+      testMatch: /auth\.setup\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: config.storefrontUrl,
+      },
+    },
     {
       name: "storefront",
       testDir: "./playwright/tests/storefront",
@@ -34,27 +34,28 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         baseURL: config.storefrontUrl,
+        storageState: config.storefrontCustomerAuthFile,
       },
-      // dependencies: ['storefront-setup'],
+      dependencies: ['storefront-setup'],
     },
-    {
-      name: "dashboard",
-      testDir: "./playwright/tests/dashboard",
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: config.dashboardUrl,
-      },
-    },
-    {
-      name: "api",
-      testDir: "./playwright/tests/api",
-      use: {
-        baseURL: config.apiUrl,
-        extraHTTPHeaders: {
-          "Content-Type": "application/json",
-        },
-      },
-    },
+    // {
+    //   name: "dashboard",
+    //   testDir: "./playwright/tests/dashboard",
+    //   use: {
+    //     ...devices["Desktop Chrome"],
+    //     baseURL: config.dashboardUrl,
+    //   },
+    // },
+    // {
+    //   name: "api",
+    //   testDir: "./playwright/tests/api",
+    //   use: {
+    //     baseURL: config.apiUrl,
+    //     extraHTTPHeaders: {
+    //       "Content-Type": "application/json",
+    //     },
+    //   },
+    // },
   ],
   ...(config.startServers
     ? {

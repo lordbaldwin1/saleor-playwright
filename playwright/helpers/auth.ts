@@ -1,6 +1,6 @@
 import type { APIRequestContext, Page } from "@playwright/test";
 import { config } from "../config";
-import type { GraphQLResponse } from "./graphql";
+import { gql } from "./graphql";
 
 const ACCESS_TOKEN_MAX_AGE = 15 * 60;
 const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60;
@@ -40,30 +40,51 @@ export async function setStorefrontAuthCookies(
   ]);
 }
 
-export async function apiCreateCustomer(request: APIRequestContext, email: string, password: string) {
+export async function apiCreateCustomer(
+  request: APIRequestContext,
+  email: string,
+  password: string,
+) {
   const redirectUrl = config.storefrontUrl;
   const channel = config.defaultChannel;
-
-  const response = await request.post(config.apiUrl, {
-    data: {
-      query: `
-        mutation RegisterAccount($email: String!, $password: String!, $redirectUrl: String, $channel: String) {
-          accountRegister(input: {email: $email, password: $password, redirectUrl: $redirectUrl, channel: $channel}) {
-            errors {
-              field
-              message
-            }
-            requiresConfirmation
-          }
+  const query = `
+    mutation RegisterAccount($email: String!, $password: String!, $redirectUrl: String, $channel: String) {
+      accountRegister(input: {email: $email, password: $password, redirectUrl: $redirectUrl, channel: $channel}) {
+        errors {
+          field
+          message
         }
-      `,
-      variables: { email, password, redirectUrl, channel },
-    },
-  });
-  return response.json() as Promise<GraphQLResponse<{ createCustomer: { customer: { id: string } } }>>;
+        requiresConfirmation
+      }
+    }
+  `;
+  const { accountRegister } = await gql<{
+    accountRegister: {
+      requiresConfirmation: boolean;
+      errors: Array<{ field: string; message: string }>;
+    };
+  }>(request, query, { email, password, redirectUrl, channel });
+
+  if (accountRegister.errors.length > 0) {
+    throw new Error(
+      accountRegister.errors
+        .map((e) => `${e.field ?? "?"}: ${e.message}`)
+        .join("; "),
+    );
+  }
+
+  if (accountRegister.requiresConfirmation) {
+    throw new Error("Account requires confirmation");
+  }
+
+  return;
 }
 
-export async function apiCreateToken(request: APIRequestContext, email: string, password: string) {
+export async function apiCreateToken(
+  request: APIRequestContext,
+  email: string,
+  password: string,
+) {
   const query = `
     mutation TokenCreate($email: String!, $password: String!) {
       tokenCreate(email: $email, password: $password) {
@@ -77,26 +98,36 @@ export async function apiCreateToken(request: APIRequestContext, email: string, 
       }
     }
   `;
-  const response = await request.post(config.apiUrl, {
-    data: {
-      query,
-      variables: { email, password },
-    },
-  });
-  return response.json() as Promise<
-    GraphQLResponse<{
-      tokenCreate: {
-        token: string;
-        refreshToken: string;
-        errors: Array<{ field: string; message: string; code: string }>;
-      };
-    }>
-  >;
+
+  const { tokenCreate } = await gql<{
+    tokenCreate: {
+      token: string;
+      refreshToken: string;
+      errors: Array<{ field: string; message: string; code: string }>;
+    };
+  }>(request, query, { email, password });
+
+  if (tokenCreate.errors.length > 0) {
+    throw new Error(
+      tokenCreate.errors
+        .map((e) => `${e.field ?? "?"}: ${e.message}`)
+        .join("; "),
+    );
+  }
+
+  return tokenCreate;
 }
 
-export async function apiLoginBrowser(page: Page, email: string, password: string) {
-  console.log("logging in", { email, password });
-  const response = await apiCreateToken(page.request, email, password);
-  const tokenCreate = response.data?.tokenCreate;
-  await setStorefrontAuthCookies(page, tokenCreate!.token, tokenCreate!.refreshToken);
+export async function apiLoginBrowser(
+  page: Page,
+  email: string,
+  password: string,
+) {
+  const { token, refreshToken } = await apiCreateToken(
+    page.request,
+    email,
+    password,
+  );
+  await setStorefrontAuthCookies(page, token, refreshToken);
+  return;
 }

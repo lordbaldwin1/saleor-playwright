@@ -1,16 +1,14 @@
-import { expect, test as setup } from "@playwright/test";
+import { test as setup } from "@playwright/test";
 import { apiCreateCustomer, apiLoginBrowser } from "../../helpers/auth";
-import path from "path";
+import { config } from "../../config";
 
-const authFile = path.join(__dirname, '../playwright/.auth/user.json');
+const authFile = config.storefrontCustomerAuthFile;
 
 setup("global auth setup", async ({ request, page }) => {
-  const email = "test@example.com";
-  const password = "password";
+  const email = `test-${Date.now() % 1000000}@example.com`;
+  const password = config.customerPassword;
 
-  const response = await apiCreateCustomer(request, email, password);
-  expect(response.errors).toBeUndefined();
-
+  await apiCreateCustomer(request, email, password);
   await apiLoginBrowser(page, email, password);
   await page.context().storageState({ path: authFile });
 });

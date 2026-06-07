@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { SearchPage } from "./SearchPage";
 import { LoginPage } from "./LoginPage";
 import { Cart } from "./Cart";
@@ -41,21 +41,27 @@ export class Navigation {
   async goto(option: NavigationOptions) {
     switch (option) {
       case "home":
+        await expect(this.homeLink).toBeVisible();
         await this.homeLink.click();
         break;
       case "all":
+        await expect(this.allLink).toBeVisible();
         await this.allLink.click();
         break;
       case "apparel":
+        await expect(this.apparelLink).toBeVisible();
         await this.apparelLink.click();
         break;
       case "accessories":
+        await expect(this.accessoriesLink).toBeVisible();
         await this.accessoriesLink.click();
         break;
       case "groceries":
+        await expect(this.groceriesLink).toBeVisible();
         await this.groceriesLink.click();
         break;
       case "login":
+        await expect(this.loginLink).toBeVisible();
         await this.loginLink.click();
         break;
       default:
