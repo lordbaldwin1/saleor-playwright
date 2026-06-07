@@ -45,5 +45,9 @@ test.describe("Guest checkout", () => {
     await expect(confirmationPage.orderItems).toHaveCount(1);
     await expect(confirmationPage.orderItems).toContainText(testProduct.name);
     await expect(confirmationPage.orderTotal).toHaveText(`$${testProduct.price}`);
+
+    const homePage = await confirmationPage.continueShopping();
+    await expect(homePage.productList).toBeVisible();
+    await expect(homePage.navigation.cartLink).toContainText("0");
   });
 });

@@ -1,4 +1,4 @@
-import type { APIRequestContext, Page } from "@playwright/test";
+import { request, type APIRequestContext, type Page } from "@playwright/test";
 import { config } from "../config";
 import { gql } from "./graphql";
 
@@ -131,3 +131,108 @@ export async function apiLoginBrowser(
   await setStorefrontAuthCookies(page, token, refreshToken);
   return;
 }
+
+export async function apiLoginRequest(
+  initialRequest: APIRequestContext,
+  email: string,
+  password: string,
+): Promise<APIRequestContext> {
+  const { token } = await apiCreateToken(initialRequest, email, password);
+  // initialRequest can't be mutated — create a new context with the token.
+  const authenticatedRequest = await request.newContext({
+    extraHTTPHeaders: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const code = `PW-${Date.now()}`;
+  const { voucherCreate } = await gql<{
+      voucherCreate: {
+        voucher: { id: string };
+        errors: Array<{ field: string; message: string; code: string }>;
+      };
+  }>(
+    authenticatedRequest,
+    `
+        mutation VoucherCreate($input: VoucherInput!) {
+          voucherCreate(input: $input) {
+            voucher {
+              id
+            }
+            errors {
+              field
+              message
+              code
+            }
+          }
+        }
+    `,
+    {
+      input: {
+        name: "Playwright APIRequestContext Voucher",
+        addCodes: [code],
+        type: "ENTIRE_ORDER",
+        discountValueType: "FIXED",
+        applyOncePerOrder: true,
+        singleUse: true,
+      },
+    },
+  );
+
+  if (voucherCreate.errors.length > 0) {
+    throw new Error(
+      voucherCreate.errors
+        .map((e) => `${e.field ?? "?"}: ${e.message}`)
+        .join("; "),
+    );
+  }
+
+  const { channels } = await gql<{
+    channels: Array<{ id: string; slug: string }>;
+  }>(authenticatedRequest, `query Channels { channels { id slug } }`);
+
+  const channel = channels.find((c) => c.slug === config.defaultChannel);
+  if (!channel) {
+    throw new Error(`Channel not found: ${config.defaultChannel}`);
+  }
+
+  const { voucherChannelListingUpdate } = await gql<{
+    voucherChannelListingUpdate: {
+      errors: Array<{ field: string; message: string; code: string }>;
+    };
+  }>(
+    authenticatedRequest,
+    `
+        mutation VoucherChannelListingUpdate(
+          $id: ID!
+          $input: VoucherChannelListingInput!
+        ) {
+          voucherChannelListingUpdate(id: $id, input: $input) {
+            errors {
+              field
+              message
+              code
+            }
+          }
+        }
+    `,
+    {
+      id: voucherCreate.voucher.id,
+      input: {
+        addChannels: [{ channelId: channel.id, discountValue: 10 }],
+      },
+    },
+  );
+
+  if (voucherChannelListingUpdate.errors.length > 0) {
+    throw new Error(
+      voucherChannelListingUpdate.errors
+        .map((e) => `${e.field ?? "?"}: ${e.message}`)
+        .join("; "),
+    );
+  }
+
+  return authenticatedRequest;
+}
+
+

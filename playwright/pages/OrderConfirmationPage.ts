@@ -1,5 +1,6 @@
 import { Locator, Page } from "@playwright/test";
 import { Navigation } from "./Navigation";
+import { HomePage } from "./HomePage";
 
 export class OrderConfirmationPage {
   private readonly page: Page;
@@ -50,5 +51,6 @@ export class OrderConfirmationPage {
 
   async continueShopping() {
     await this.continueShoppingLink.click();
+    return new HomePage(this.page);
   }
 }
