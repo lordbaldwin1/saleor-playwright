@@ -70,6 +70,7 @@ export type TestData = {
   testProduct: TestProduct;
   multiVariantTestProduct: TestProduct;
   guestCheckout: CheckoutData;
+  voucherCode: { code: string; discountValue: number };
 };
 
 export const testData = {
@@ -102,5 +103,9 @@ export const testData = {
       nameOnCard: "John Doe",
     },
     shippingMethod: "Default",
+  },
+  voucherCode: {
+    code: `PW-${Date.now()}`,
+    discountValue: 10,
   },
 } satisfies TestData;

@@ -33,6 +33,9 @@ export class CheckoutPage {
   readonly cardNameInput: Locator;
   readonly payButton: Locator;
   readonly returnToShippingButton: Locator;
+  readonly voucherCodeInput: Locator;
+  readonly applyVoucherButton: Locator;
+  readonly orderSummary: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -43,12 +46,16 @@ export class CheckoutPage {
     this.shippingLastNameInput = this.page.getByLabel("Last name");
     this.shippingCompanyInput = this.page.getByLabel(/Company/);
     this.shippingStreetAddressInput = this.page.getByLabel("Street address");
-    this.shippingStreetAddress2Input = this.page.getByLabel(/Apartment, suite, etc\./);
+    this.shippingStreetAddress2Input = this.page.getByLabel(
+      /Apartment, suite, etc\./,
+    );
     this.shippingCityInput = this.page.getByLabel("City");
     this.shippingPostalCodeInput = this.page.getByLabel(/code/);
-    this.shippingStateSelect = this.page.getByLabel("State"); 
+    this.shippingStateSelect = this.page.getByLabel("State");
     this.shippingPhoneInput = this.page.getByLabel(/Phone number/);
-    this.continueToShippingButton = this.page.getByRole("button", { name: "Continue to shipping" });
+    this.continueToShippingButton = this.page.getByRole("button", {
+      name: "Continue to shipping",
+    });
     this.contactSummary = this.page
       .locator("div")
       .filter({ has: this.page.getByText("Contact", { exact: true }) })
@@ -57,22 +64,46 @@ export class CheckoutPage {
       .locator("div")
       .filter({ has: this.page.getByText("Ship to", { exact: true }) })
       .locator("span.break-words");
-    this.shippingMethodHeading = this.page.getByRole("heading", { name: "Shipping method" });
-    this.continueToPaymentButton = this.page.getByRole("button", { name: "Continue to payment" });
-    this.returnToInformationButton = this.page.getByRole("button", { name: "Return to information" });
+    this.shippingMethodHeading = this.page.getByRole("heading", {
+      name: "Shipping method",
+    });
+    this.continueToPaymentButton = this.page.getByRole("button", {
+      name: "Continue to payment",
+    });
+    this.returnToInformationButton = this.page.getByRole("button", {
+      name: "Return to information",
+    });
     this.shippingMethodSummary = this.page
       .locator("div")
       .filter({ has: this.page.getByText("Method", { exact: true }) })
       .locator("span.break-words");
-    this.shippingMethodRadioButtons = this.page.locator("label.flex.cursor-pointer");
+    this.shippingMethodRadioButtons = this.page.locator(
+      "label.flex.cursor-pointer",
+    );
     this.paymentHeading = this.page.getByRole("heading", { name: "Payment" });
-    this.creditCardRadio = this.page.getByRole("radio", { name: "Credit card" });
+    this.creditCardRadio = this.page.getByRole("radio", {
+      name: "Credit card",
+    });
     this.cardNumberInput = this.page.getByPlaceholder("Card number");
     this.cardExpiryInput = this.page.getByPlaceholder("MM/YY");
     this.cardCvcInput = this.page.getByPlaceholder("CVC");
     this.cardNameInput = this.page.getByPlaceholder("Name on card");
     this.payButton = this.page.getByRole("button", { name: /^Pay \$/ });
-    this.returnToShippingButton = this.page.getByRole("button", { name: "Return to shipping" });
+    this.returnToShippingButton = this.page.getByRole("button", {
+      name: "Return to shipping",
+    });
+    this.orderSummary = this.page
+      .getByRole("article")
+      .filter({
+        has: this.page.getByRole("heading", { name: "Order Summary" }),
+      })
+      .filter({ visible: true });
+    this.voucherCodeInput = this.orderSummary
+      .getByPlaceholder("Discount code")
+    this.applyVoucherButton = this.orderSummary.getByRole("button", {
+      name: "Apply",
+      exact: true,
+    });
   }
 
   async fillShippingForm(details: ShippingDetails) {
@@ -105,7 +136,7 @@ export class CheckoutPage {
   async continueToShipping() {
     await this.continueToShippingButton.click();
   }
-  
+
   async selectDefaultShippingMethod() {
     await this.shippingMethodRadioButtons.first().click();
   }

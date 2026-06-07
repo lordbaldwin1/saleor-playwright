@@ -5,7 +5,6 @@ test.describe("Guest checkout", () => {
 
   test("should complete guest checkout", async ({
     productsPage,
-    checkoutPage,
     testProduct,
     guestCheckout,
   }) => {
@@ -20,7 +19,7 @@ test.describe("Guest checkout", () => {
     await expect(productDetailPage.navigation.cart.cartItems).toHaveCount(1);
     await expect(productDetailPage.navigation.cart.cartTotal).toContainText(testProduct.price!);
 
-    await productDetailPage.navigation.cart.checkout();
+    const checkoutPage = await productDetailPage.navigation.cart.checkout();
     await expect(checkoutPage.contactInput).toBeVisible();
 
     await checkoutPage.fillShippingForm(guestCheckout.shipping);
@@ -49,5 +48,38 @@ test.describe("Guest checkout", () => {
     const homePage = await confirmationPage.continueShopping();
     await expect(homePage.productList).toBeVisible();
     await expect(homePage.navigation.cartLink).toContainText("0");
+  });
+
+  test("discount voucher should be applied to order", async ({
+    productsPage,
+    voucherCode,
+    testProduct,
+    guestCheckout,
+  }) => {
+    await productsPage.goto();
+    const productDetailPage = await productsPage.findAndNavigateToProductDetailPage(testProduct.name);
+
+    await productDetailPage.addToBag();
+    await expect(productDetailPage.navigation.cartLink).toContainText("1");
+    await productDetailPage.navigation.goToCart();
+    await expect(productDetailPage.navigation.cart.checkoutButton).toBeEnabled();
+
+    const checkoutPage = await productDetailPage.navigation.cart.checkout();
+    await expect(checkoutPage.contactInput).toBeVisible();
+
+    await checkoutPage.fillShippingForm(guestCheckout.shipping);
+    await expect(checkoutPage.continueToShippingButton).toBeEnabled();
+    await checkoutPage.continueToShipping();
+
+    await expect(checkoutPage.shippingMethodHeading).toBeVisible();
+    await checkoutPage.selectDefaultShippingMethod();
+    await expect(checkoutPage.continueToPaymentButton).toBeEnabled();
+    await checkoutPage.continueToPayment();
+
+    // discount code
+    await expect(checkoutPage.voucherCodeInput).toBeVisible();
+    await checkoutPage.voucherCodeInput.fill(voucherCode.code);
+    await checkoutPage.applyVoucherButton.click();
+    await expect(checkoutPage.orderSummary).toContainText(`-$${voucherCode.discountValue}`);
   });
 });
