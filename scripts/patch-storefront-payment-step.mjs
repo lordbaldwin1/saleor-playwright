@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Patches storefront checkout to use the dummy payment app gateway.
+ * Patches storefront checkout for E2E: dummy payment app gateway + production build types.
  * Idempotent — safe to run multiple times.
  */
 import { readFileSync, writeFileSync } from "node:fs";
@@ -12,31 +12,65 @@ const paymentStepPath = join(
 );
 
 let content = readFileSync(paymentStepPath, "utf8");
+let changed = false;
 
-if (content.includes('DUMMY_GATEWAY_IDS = ["saleor.io.dummy-payment-app"')) {
-  console.log("storefront payment-step.tsx already patched for dummy payment app");
-  process.exit(0);
-}
-
-const oldNeedle = `// Dummy payment gateway ID (from Saleor Dummy Payment app)
+const oldGatewayNeedle = `// Dummy payment gateway ID (from Saleor Dummy Payment app)
 const dummyGatewayId = "mirumee.payments.dummy";`;
 
-const newNeedle = `// Dummy payment gateway ID (from Saleor Dummy Payment app)
-const dummyGatewayId = "saleor.io.dummy-payment-app";`;
+const newGatewayNeedle = `const DUMMY_GATEWAY_IDS = ["saleor.io.dummy-payment-app", "mirumee.payments.dummy"] as const;
 
-if (content.includes(oldNeedle)) {
-  content = content.replace(oldNeedle, newNeedle);
-  writeFileSync(paymentStepPath, content);
-  console.log("Patched storefront payment-step.tsx: mirumee.payments.dummy -> saleor.io.dummy-payment-app");
-  process.exit(0);
+const findDummyGateway = (gateways: CheckoutFragment["availablePaymentGateways"]) =>
+\tgateways?.find((gateway) => DUMMY_GATEWAY_IDS.includes(gateway.id as (typeof DUMMY_GATEWAY_IDS)[number]));`;
+
+if (content.includes(oldGatewayNeedle)) {
+  content = content.replace(oldGatewayNeedle, newGatewayNeedle);
+  content = content.replace(
+    "availablePaymentGateways?.find((gateway) => gateway.id === dummyGatewayId)",
+    "findDummyGateway(availablePaymentGateways)",
+  );
+  changed = true;
+  console.log("Patched payment-step.tsx: dummy payment app gateway IDs");
 }
 
-if (content.includes('const dummyGatewayId = "saleor.io.dummy-payment-app"')) {
-  console.log("storefront payment-step.tsx already uses saleor.io.dummy-payment-app");
-  process.exit(0);
+const oldCheckoutAssignment =
+  "updatedCheckout = result.data?.checkoutBillingAddressUpdate?.checkout ?? checkout;";
+
+const newCheckoutAssignment = `updatedCheckout = (result.data?.checkoutBillingAddressUpdate?.checkout ??
+\t\t\t\t\t\tcheckout) as typeof checkout;`;
+
+const spreadCheckoutAssignment = `updatedCheckout = {
+\t\t\t\t\t...checkout,
+\t\t\t\t\t...(result.data?.checkoutBillingAddressUpdate?.checkout ?? {}),
+\t\t\t\t};`;
+
+if (content.includes(oldCheckoutAssignment)) {
+  content = content.replaceAll(oldCheckoutAssignment, newCheckoutAssignment);
+  changed = true;
+  console.log("Patched payment-step.tsx: checkout billing update type fix");
+} else if (content.includes(spreadCheckoutAssignment)) {
+  content = content.replaceAll(spreadCheckoutAssignment, newCheckoutAssignment);
+  changed = true;
+  console.log("Patched payment-step.tsx: checkout billing update type fix");
 }
 
-console.error(
-  "Could not patch storefront payment-step.tsx — upstream format changed. Update scripts/patch-storefront-payment-step.mjs",
-);
-process.exit(1);
+if (!changed) {
+  const hasGatewayPatch = content.includes(
+    'DUMMY_GATEWAY_IDS = ["saleor.io.dummy-payment-app"',
+  );
+  const hasCheckoutPatch = content.includes(
+    ") as typeof checkout;",
+  );
+
+  if (hasGatewayPatch && hasCheckoutPatch) {
+    console.log("storefront payment-step.tsx already patched for E2E");
+    process.exit(0);
+  }
+
+  console.error(
+    "Could not patch storefront payment-step.tsx — upstream format changed. Update scripts/patch-storefront-payment-step.mjs",
+  );
+  process.exit(1);
+}
+
+writeFileSync(paymentStepPath, content);
+console.log("Patched storefront payment-step.tsx for E2E");

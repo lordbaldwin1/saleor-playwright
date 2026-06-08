@@ -31,5 +31,15 @@ if ! grep -q '^NEXT_PUBLIC_DEFAULT_CHANNEL=' storefront/.env 2>/dev/null; then
   echo 'NEXT_PUBLIC_DEFAULT_CHANNEL=default-channel' >> storefront/.env
 fi
 
+if grep -q '^SALEOR_E2E=' storefront/.env 2>/dev/null; then
+  if [[ "$(uname)" == "Darwin" ]]; then
+    sed -i '' 's|^SALEOR_E2E=.*|SALEOR_E2E=1|' storefront/.env
+  else
+    sed -i 's|^SALEOR_E2E=.*|SALEOR_E2E=1|' storefront/.env
+  fi
+else
+  echo 'SALEOR_E2E=1' >> storefront/.env
+fi
+
 node scripts/patch-storefront-next-config.mjs
 node scripts/patch-storefront-payment-step.mjs

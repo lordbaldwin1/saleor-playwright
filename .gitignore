@@ -8,6 +8,9 @@ node_modules/
 .saleor-init-done
 storefront-dev.log
 storefront-dev.pid
+storefront-build.log
+storefront.log
+storefront.pid
 dummy-payment-app-dev.log
 dummy-payment-app-dev.pid
 

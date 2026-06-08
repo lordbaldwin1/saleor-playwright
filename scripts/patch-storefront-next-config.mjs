@@ -9,15 +9,31 @@ import { join } from "node:path";
 const configPath = join(process.cwd(), "storefront/next.config.js");
 let content = readFileSync(configPath, "utf8");
 
-if (content.includes("dangerouslyAllowLocalIP")) {
+const localIpGuard =
+  'dangerouslyAllowLocalIP: process.env.SALEOR_E2E === "1"';
+const legacyLocalIpGuard =
+  "dangerouslyAllowLocalIP: process.env.NODE_ENV === \"development\"";
+
+if (content.includes(localIpGuard)) {
   console.log("storefront/next.config.js already patched for local images");
+  process.exit(0);
+}
+
+if (content.includes(legacyLocalIpGuard)) {
+  writeFileSync(
+    configPath,
+    content.replace(legacyLocalIpGuard, localIpGuard),
+  );
+  console.log(
+    "Updated storefront/next.config.js local image patch for production E2E",
+  );
   process.exit(0);
 }
 
 const needle = "\timages: {\n\t\tremotePatterns: [";
 const replacement = `\timages: {
 \t\t// Local Saleor API thumbnails (Next.js 16+ blocks localhost by default)
-\t\tdangerouslyAllowLocalIP: process.env.NODE_ENV === "development",
+\t\t${localIpGuard},
 \t\tremotePatterns: [
 \t\t\t{
 \t\t\t\tprotocol: "http",

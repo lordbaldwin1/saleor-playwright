@@ -85,10 +85,10 @@ export default defineConfig({
             reuseExistingServer: !process.env.CI,
           },
           {
-            command: "npm run storefront:dev",
+            command: "npm run storefront:prod",
             url: config.storefrontUrl,
             cwd: repoRoot,
-            timeout: 300_000,
+            timeout: 600_000,
             reuseExistingServer: !process.env.CI,
           },
         ],

@@ -10,6 +10,8 @@
     "saleor:up:detached": "bash scripts/saleor-up-detached.sh",
     "saleor:down": "bash scripts/saleor-down.sh",
     "storefront:configure": "bash scripts/configure-storefront.sh",
+    "storefront:build": "bash scripts/build-storefront.sh",
+    "storefront:prod": "bash scripts/storefront-prod.sh",
     "storefront:dev": "bash scripts/storefront-dev.sh",
     "payment-app:configure": "bash scripts/configure-dummy-payment-app.sh",
     "payment-app:dev": "bash scripts/dummy-payment-app-dev.sh",

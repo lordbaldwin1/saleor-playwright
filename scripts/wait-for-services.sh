@@ -46,9 +46,13 @@ if [[ -d saleor-platform ]]; then
   docker compose -f saleor-platform/docker-compose.yml ps || true
   docker compose -f saleor-platform/docker-compose.yml logs --tail=80 api worker db || true
 fi
-if [[ -f storefront-dev.log ]]; then
-  echo "--- storefront dev log (tail) ---"
-  tail -80 storefront-dev.log || true
+if [[ -f storefront-build.log ]]; then
+  echo "--- storefront build log (tail) ---"
+  tail -80 storefront-build.log || true
+fi
+if [[ -f storefront.log ]]; then
+  echo "--- storefront log (tail) ---"
+  tail -80 storefront.log || true
 fi
 if [[ -f dummy-payment-app-dev.log ]]; then
   echo "--- dummy payment app dev log (tail) ---"

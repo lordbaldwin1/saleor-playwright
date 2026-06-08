@@ -79,13 +79,13 @@ jobs:
       - name: Install dummy payment app in Saleor
         run: npm run payment-app:install
 
-      - name: Start storefront dev server
+      - name: Build and start storefront (production)
         run: bash scripts/start-storefront-ci.sh
 
       - name: Wait for storefront
         run: WAIT_STOREFRONT=1 bash scripts/wait-for-services.sh
         env:
-          MAX_ATTEMPTS: 72
+          MAX_ATTEMPTS: 120
 
       - name: Run Playwright tests
         run: npm test
@@ -100,12 +100,14 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
-      - name: Upload storefront dev log
+      - name: Upload storefront logs
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: storefront-dev-log
-          path: storefront-dev.log
+          name: storefront-logs
+          path: |
+            storefront-build.log
+            storefront.log
           retention-days: 3
 
       - name: Upload dummy payment app dev log
