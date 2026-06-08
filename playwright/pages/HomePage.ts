@@ -16,6 +16,6 @@ export class HomePage extends BasePage {
   }
 
   async goto() {
-    await this.page.goto("/default-channel");
+    await this.page.goto(".");
   }
 }

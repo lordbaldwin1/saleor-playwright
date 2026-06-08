@@ -6,14 +6,34 @@ function required(name: string, fallback?: string): string {
   return value;
 }
 
+const defaultChannel = process.env.NEXT_PUBLIC_DEFAULT_CHANNEL ?? "default-channel";
+
+/** Ensure storefront baseURL ends with `/{channel}/` for Playwright relative navigations. */
+function storefrontUrlWithChannel(raw: string, channel: string): string {
+  const url = new URL(raw);
+  const path = url.pathname.replace(/\/$/, "");
+  const channelPath = `/${channel}`;
+  if (path === channelPath || path.endsWith(channelPath)) {
+    if (!url.pathname.endsWith("/")) {
+      url.pathname += "/";
+    }
+  } else {
+    url.pathname = `${path}${channelPath}/`;
+  }
+  return url.toString();
+}
+
 export const config = {
   apiUrl: required("SALEOR_API_URL", "http://localhost:8000/graphql/"),
   apiHealthUrl: required("SALEOR_API_HEALTH_URL", "http://localhost:8000/health/"),
   dashboardUrl: required("SALEOR_DASHBOARD_URL", "http://localhost:9000/"),
-  storefrontUrl: required("SALEOR_STOREFRONT_URL", "http://localhost:3000/default-channel/"),
+  storefrontUrl: storefrontUrlWithChannel(
+    required("SALEOR_STOREFRONT_URL", "http://localhost:3000/"),
+    defaultChannel,
+  ),
   adminEmail: required("SALEOR_ADMIN_EMAIL", "admin@example.com"),
   adminPassword: required("SALEOR_ADMIN_PASSWORD", "admin"),
-  defaultChannel: process.env.NEXT_PUBLIC_DEFAULT_CHANNEL ?? "default-channel",
+  defaultChannel,
   dummyPaymentAppPort: Number(process.env.DUMMY_PAYMENT_APP_PORT ?? "3001"),
   dummyPaymentAppUrl:
     process.env.DUMMY_PAYMENT_APP_IFRAME_URL ??

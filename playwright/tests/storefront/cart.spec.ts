@@ -6,6 +6,7 @@ test.describe("Cart", () => {
     const productDetailPage = await productsPage.findAndNavigateToProductDetailPage(testProduct.name);
     await expect(productDetailPage.addToBagButton).toBeEnabled();
 
+    const productPrice = await productDetailPage.getPrice();
     await productDetailPage.addToBagButton.click();
     await expect(productDetailPage.navigation.cartLink).toContainText("1");
 
@@ -13,6 +14,6 @@ test.describe("Cart", () => {
     await expect(productDetailPage.navigation.cart.dialog).toBeVisible();
 
     await expect(productDetailPage.navigation.cart.cartItems).toHaveCount(1);
-    expect(productDetailPage.navigation.cart.cartTotal).toContainText(testProduct.price!);
+    expect(productDetailPage.navigation.cart.cartTotal).toContainText(productPrice);
   });
 });

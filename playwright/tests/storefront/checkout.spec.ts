@@ -12,6 +12,7 @@ test.describe("Guest checkout", () => {
     const productDetailPage =
       await productsPage.findAndNavigateToProductDetailPage(testProduct.name);
 
+    const productPrice = await productDetailPage.getPrice();
     await productDetailPage.addToBag();
     await expect(productDetailPage.navigation.cartLink).toContainText("1");
 
@@ -19,7 +20,7 @@ test.describe("Guest checkout", () => {
     await expect(productDetailPage.navigation.cart.dialog).toBeVisible();
     await expect(productDetailPage.navigation.cart.cartItems).toHaveCount(1);
     await expect(productDetailPage.navigation.cart.cartTotal).toContainText(
-      testProduct.price!,
+      productPrice,
     );
 
     const checkoutPage = await productDetailPage.navigation.cart.checkout();

@@ -22,7 +22,7 @@ export class LoginPage extends BasePage {
   }
 
   async goto() {
-    await this.page.goto("default-channel/login");
+    await this.page.goto("login");
   }
 
   async fillEmail(email: string) {

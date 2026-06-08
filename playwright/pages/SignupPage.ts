@@ -40,7 +40,7 @@ export class SignupPage extends BasePage {
   }
 
   async goto() {
-    await this.page.goto("default-channel/signup");
+    await this.page.goto("signup");
   }
 
   async fillForm(firstName: string, lastName: string, email: string, password: string, confirmPassword: string) {

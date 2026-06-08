@@ -20,4 +20,12 @@ export class ProductDetailPage extends BasePage {
   async addToBag() {
     await this.addToBagButton.click();
   }
+
+  async getPrice() {
+    const price = await this.price.textContent();
+    if (!price) {
+      throw new Error("Price not found");
+    }
+    return price;
+  }
 }

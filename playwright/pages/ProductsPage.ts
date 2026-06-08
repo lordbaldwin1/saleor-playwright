@@ -21,7 +21,7 @@ export class ProductsPage extends BasePage {
   }
 
   async goto() {
-    await this.page.goto(`/default-channel/products`);
+    await this.page.goto("products");
   }
 
   async navigateToFirstProductDetailPage() { 
