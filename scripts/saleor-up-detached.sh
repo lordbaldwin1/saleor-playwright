@@ -17,4 +17,5 @@ if [[ ! -f "$ROOT/.saleor-init-done" ]]; then
 fi
 
 node "$ROOT/scripts/patch-saleor-platform-docker.mjs"
+bash "$ROOT/scripts/configure-saleor-e2e-settings.sh"
 docker compose up -d

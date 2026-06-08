@@ -22,5 +22,7 @@ docker compose run --rm api python3 manage.py migrate
 echo "==> Populating database (sample data + admin@example.com / admin)..."
 docker compose run --rm api python3 manage.py populatedb --createsuperuser
 
+bash "$ROOT/scripts/configure-saleor-e2e-settings.sh"
+
 touch "$ROOT/.saleor-init-done"
 echo "==> Saleor platform initialized."

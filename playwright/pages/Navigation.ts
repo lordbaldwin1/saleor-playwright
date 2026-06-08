@@ -86,6 +86,7 @@ export class Navigation extends BasePage {
 
   async openMobileMenu() {
     await expect(this.mobileMenuButton).toBeEnabled();
+    await this.mobileMenuButton.focus();
     await this.mobileMenuButton.click();
     await expect(this.mobileMenuDialog).toBeVisible();
   }
