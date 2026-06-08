@@ -44,7 +44,9 @@ export default defineConfig({
       testIgnore: /auth\.setup\.ts/,
       use: {
         ...devices["iPhone 13"],
+        browserName: "chromium",
         baseURL: config.storefrontUrl,
+        storageState: config.storefrontCustomerAuthFile,
       },
       dependencies: ['storefront-setup'],
     }
