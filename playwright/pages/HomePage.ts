@@ -1,6 +1,5 @@
 import { Locator, Page } from "@playwright/test";
 import { Navigation } from "./Navigation";
-import { config } from "../config";
 import { BasePage } from "./BasePage";
 
 

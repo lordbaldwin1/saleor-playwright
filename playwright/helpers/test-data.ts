@@ -1,3 +1,4 @@
+import { config } from "../config";
 import { NavigationOptions } from "../pages/Navigation";
 
 export type TestProduct = {
@@ -68,12 +69,26 @@ export const navigationTestCases: NavigationTestCase[] = [
   },
 ];
 
+export type SignupData = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+};
+
+export type LoginData = {
+  email: string;
+  password: string;
+};
+
 export type TestData = {
   testProduct: TestProduct;
   multiVariantTestProduct: TestProduct;
   guestCheckout: CheckoutData;
   guestCheckoutNonDefaultShippingMethod: CheckoutData;
   voucherCode: { code: string; discountValue: number };
+  signup: SignupData;
+  login: LoginData;
 };
 
 export const testData = {
@@ -129,5 +144,15 @@ export const testData = {
   voucherCode: { // sample voucher PW-1780794899003
     code: `PW-${Date.now()}`,
     discountValue: 10,
+  },
+  signup: {
+    firstName: "John",
+    lastName: "Doe",
+    email: `test-${Date.now()}@example.com`,
+    password: config.customerPassword,
+  },
+  login: {
+    email: `test-${Math.random().toString(36).slice(2, 12)}@example.com`,
+    password: config.customerPassword,
   },
 } satisfies TestData;

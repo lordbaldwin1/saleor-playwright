@@ -3,13 +3,17 @@ import { HomePage } from "../pages/HomePage";
 import { ProductsPage } from "../pages/ProductsPage";
 import { CheckoutPage } from "../pages/CheckoutPage";
 import {
+  LoginData,
   testData,
   type CheckoutData,
+  type SignupData,
   type TestProduct,
 } from "../helpers/test-data";
 import { config } from "../config";
-import { apiLoginRequest } from "../helpers/auth";
+import { apiCreateCustomer, apiLoginRequest } from "../helpers/auth";
 import { gql } from "../helpers/graphql";
+import { SignupPage } from "../pages/SignupPage";
+import { LoginPage } from "../pages/LoginPage";
 // import path from "path";
 // import fs from "fs";
 // import { apiCreateCustomer, apiLoginBrowser } from "../helpers/auth";
@@ -18,6 +22,8 @@ import { gql } from "../helpers/graphql";
 type Fixtures = {
   // e2e fixtures
   homePage: HomePage;
+  signupPage: SignupPage;
+  loginPage: LoginPage;
   productsPage: ProductsPage;
   checkoutPage: CheckoutPage;
   testData: typeof testData;
@@ -25,9 +31,12 @@ type Fixtures = {
   multiVariantTestProduct: TestProduct;
   guestCheckout: CheckoutData;
   guestCheckoutNonDefaultShippingMethod: CheckoutData;
+  signupTestData: SignupData;
+  loginTestData: LoginData;
   // api fixtures
   authenticatedRequest: APIRequestContext;
   voucherCode: { code: string; discountValue: number };
+  uniqueCustomer: LoginData;
 };
 
 type WorkerFixtures = {
@@ -35,39 +44,14 @@ type WorkerFixtures = {
 };
 
 const test = base.extend<Fixtures, WorkerFixtures>({
-  // storageState: async ({ workerStorageState }, use) =>
-  //   await use(workerStorageState),
-
-  // workerStorageState: [
-  //   async ({ browser }, use) => {
-  //     const id = test.info().parallelIndex;
-  //     const authDir = path.resolve(config.authDir);
-  //     const fileName = path.join(authDir, `storage-${id}.json`);
-
-  //     fs.mkdirSync(authDir, { recursive: true });
-
-  //     if (fs.existsSync(fileName)) {
-  //       await use(fileName);
-  //       return;
-  //     }
-
-  //     const page = await browser.newPage({ storageState: undefined });
-  //     const email = `worker-${id}@example.com`;
-  //     const password = "password";
-
-  //     await apiCreateCustomer(page.request, email, password);
-  //     await apiLoginBrowser(page, email, password);
-  //     await page.goto("/default-channel");
-  //     await expect(page.getByRole("button", { name: /Open user menu/ })).toBeVisible();
-  //     await page.context().storageState({ path: fileName });
-  //     await page.close();
-  //     await use(fileName);
-  //   },
-  //   { scope: "worker" },
-  // ],
-
   homePage: async ({ page }, use) => {
     await use(new HomePage(page));
+  },
+  signupPage: async ({ page }, use) => {
+    await use(new SignupPage(page));
+  },
+  loginPage: async ({ page }, use) => {
+    await use(new LoginPage(page));
   },
   productsPage: async ({ page }, use) => {
     await use(new ProductsPage(page));
@@ -90,7 +74,14 @@ const test = base.extend<Fixtures, WorkerFixtures>({
   guestCheckoutNonDefaultShippingMethod: async ({ testData }, use) => {
     await use(testData.guestCheckoutNonDefaultShippingMethod);
   },
-  
+  signupTestData: async ({ testData }, use) => {
+    await use(testData.signup);
+  },
+  loginTestData: async ({ testData }, use) => {
+    await use(testData.login);
+  },
+
+  // api fixtures
   authenticatedRequest: async ({ request }, use) => {
     const authenticatedRequest = await apiLoginRequest(
       request,
@@ -99,6 +90,10 @@ const test = base.extend<Fixtures, WorkerFixtures>({
     );
     await use(authenticatedRequest);
     await authenticatedRequest.dispose();
+  },
+  uniqueCustomer: async ({ authenticatedRequest, loginTestData }, use) => {
+    await apiCreateCustomer(authenticatedRequest, loginTestData.email, loginTestData.password);
+    await use(loginTestData);
   },
   voucherCode: async ({ authenticatedRequest, testData }, use) => {
     const { code, discountValue } = testData.voucherCode;
