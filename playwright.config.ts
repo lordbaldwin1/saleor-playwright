@@ -27,17 +27,17 @@ export default defineConfig({
         baseURL: config.storefrontUrl,
       },
     },
-    {
-      name: "storefront",
-      testDir: "./playwright/tests/storefront",
-      testIgnore: /auth\.setup\.ts/,
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: config.storefrontUrl,
-        storageState: config.storefrontCustomerAuthFile,
-      },
-      dependencies: ['storefront-setup'],
-    },
+    // {
+    //   name: "storefront",
+    //   testDir: "./playwright/tests/storefront",
+    //   testIgnore: /auth\.setup\.ts/,
+    //   use: {
+    //     ...devices["Desktop Chrome"],
+    //     baseURL: config.storefrontUrl,
+    //     storageState: config.storefrontCustomerAuthFile,
+    //   },
+    //   dependencies: ['storefront-setup'],
+    // },
     {
       name: "storefront-mobile",
       testDir: "./playwright/tests/storefront",

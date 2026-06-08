@@ -14,23 +14,56 @@ const paymentStepPath = join(
 let content = readFileSync(paymentStepPath, "utf8");
 let changed = false;
 
-const oldGatewayNeedle = `// Dummy payment gateway ID (from Saleor Dummy Payment app)
+function apply(oldText, newText, label) {
+  if (!content.includes(oldText)) {
+    return false;
+  }
+  content = content.replace(oldText, newText);
+  changed = true;
+  console.log(`Patched payment-step.tsx: ${label}`);
+  return true;
+}
+
+// --- Current upstream storefront (hasDummyGateway / hasRealGateway) ---
+const legacyGatewayDecl = `// Dummy payment gateway ID (from Saleor Dummy Payment app)
 const dummyGatewayId = "mirumee.payments.dummy";`;
 
-const newGatewayNeedle = `const DUMMY_GATEWAY_IDS = ["saleor.io.dummy-payment-app", "mirumee.payments.dummy"] as const;
+const e2eGatewayDecl = `const DUMMY_GATEWAY_IDS = ["saleor.io.dummy-payment-app", "mirumee.payments.dummy"] as const;
+const isDummyGatewayId = (id: string) =>
+\tDUMMY_GATEWAY_IDS.includes(id as (typeof DUMMY_GATEWAY_IDS)[number]);`;
+
+apply(legacyGatewayDecl, e2eGatewayDecl, "dummy payment gateway IDs");
+
+apply(
+  `const hasDummyGateway = availableGateways.some((g) => g.id === dummyGatewayId);
+\tconst hasRealGateway = availableGateways.some((g) => g.id !== dummyGatewayId);`,
+  `const dummyGateway = availableGateways.find((g) => isDummyGatewayId(g.id));
+\tconst hasDummyGateway = !!dummyGateway;
+\tconst hasRealGateway = availableGateways.some((g) => !isDummyGatewayId(g.id));`,
+  "dummy gateway detection",
+);
+
+apply(
+  `\t\t\t\t\tid: dummyGatewayId,`,
+  `\t\t\t\t\tid: dummyGateway!.id,`,
+  "transaction gateway id",
+);
+
+// --- Older storefront (findDummyGateway helper) ---
+apply(
+  `const dummyGatewayId = "mirumee.payments.dummy";`,
+  `const DUMMY_GATEWAY_IDS = ["saleor.io.dummy-payment-app", "mirumee.payments.dummy"] as const;
 
 const findDummyGateway = (gateways: CheckoutFragment["availablePaymentGateways"]) =>
-\tgateways?.find((gateway) => DUMMY_GATEWAY_IDS.includes(gateway.id as (typeof DUMMY_GATEWAY_IDS)[number]));`;
+\tgateways?.find((gateway) => DUMMY_GATEWAY_IDS.includes(gateway.id as (typeof DUMMY_GATEWAY_IDS)[number]));`,
+  "dummy payment gateway IDs (legacy layout)",
+);
 
-if (content.includes(oldGatewayNeedle)) {
-  content = content.replace(oldGatewayNeedle, newGatewayNeedle);
-  content = content.replace(
-    "availablePaymentGateways?.find((gateway) => gateway.id === dummyGatewayId)",
-    "findDummyGateway(availablePaymentGateways)",
-  );
-  changed = true;
-  console.log("Patched payment-step.tsx: dummy payment app gateway IDs");
-}
+apply(
+  "availablePaymentGateways?.find((gateway) => gateway.id === dummyGatewayId)",
+  "findDummyGateway(availablePaymentGateways)",
+  "find dummy gateway helper usage",
+);
 
 const oldCheckoutAssignment =
   "updatedCheckout = result.data?.checkoutBillingAddressUpdate?.checkout ?? checkout;";
@@ -38,30 +71,20 @@ const oldCheckoutAssignment =
 const newCheckoutAssignment = `updatedCheckout = (result.data?.checkoutBillingAddressUpdate?.checkout ??
 \t\t\t\t\t\tcheckout) as typeof checkout;`;
 
-const spreadCheckoutAssignment = `updatedCheckout = {
-\t\t\t\t\t...checkout,
-\t\t\t\t\t...(result.data?.checkoutBillingAddressUpdate?.checkout ?? {}),
-\t\t\t\t};`;
-
 if (content.includes(oldCheckoutAssignment)) {
   content = content.replaceAll(oldCheckoutAssignment, newCheckoutAssignment);
-  changed = true;
-  console.log("Patched payment-step.tsx: checkout billing update type fix");
-} else if (content.includes(spreadCheckoutAssignment)) {
-  content = content.replaceAll(spreadCheckoutAssignment, newCheckoutAssignment);
   changed = true;
   console.log("Patched payment-step.tsx: checkout billing update type fix");
 }
 
 if (!changed) {
-  const hasGatewayPatch = content.includes(
-    'DUMMY_GATEWAY_IDS = ["saleor.io.dummy-payment-app"',
-  );
-  const hasCheckoutPatch = content.includes(
-    ") as typeof checkout;",
-  );
+  const alreadyPatched =
+    content.includes('DUMMY_GATEWAY_IDS = ["saleor.io.dummy-payment-app"') &&
+    (content.includes("isDummyGatewayId") ||
+      content.includes("findDummyGateway") ||
+      content.includes(") as typeof checkout;"));
 
-  if (hasGatewayPatch && hasCheckoutPatch) {
+  if (alreadyPatched) {
     console.log("storefront payment-step.tsx already patched for E2E");
     process.exit(0);
   }

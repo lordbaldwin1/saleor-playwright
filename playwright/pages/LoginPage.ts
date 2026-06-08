@@ -46,10 +46,6 @@ export class LoginPage extends BasePage {
   async login(email: string, password: string) {
     await this.fillForm(email, password);
     await this.clickSignIn();
-    if (await this.isMobile()) { // what the fuck? mobile requires 2x input?
-      await this.fillForm(email, password);
-      await this.clickSignIn();
-    }
     return new HomePage(this.page);
   }
 }
