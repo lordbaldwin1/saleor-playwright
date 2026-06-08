@@ -4,7 +4,14 @@ import { LoginPage } from "./LoginPage";
 import { Cart } from "./Cart";
 import { BasePage } from "./BasePage";
 
-export type NavigationOptions = "home" | "all" | "apparel" | "accessories" | "groceries" | "login" | "cart";
+export type NavigationOptions =
+  | "home"
+  | "all"
+  | "apparel"
+  | "accessories"
+  | "groceries"
+  | "login"
+  | "cart";
 
 export class Navigation extends BasePage {
   readonly cart: Cart;
@@ -21,12 +28,15 @@ export class Navigation extends BasePage {
   readonly mobileMenuButton: Locator;
   readonly mobileMenuDialog: Locator;
   readonly mobileHomeLink: Locator;
+  readonly mobileSearchInput: Locator;
 
   constructor(page: Page) {
     super(page);
     this.cart = new Cart(this.page);
     this.container = this.page.locator("header");
-    this.mobileMenuDialog = this.page.getByRole("dialog", { name: "Navigation menu" });
+    this.mobileMenuDialog = this.page.getByRole("dialog", {
+      name: "Navigation menu",
+    });
     this.homeLink = this.container.getByLabel("Homepage");
     this.allLink = this.page.getByRole("link", { name: "All" });
     this.apparelLink = this.page.getByRole("link", { name: "Apparel" });
@@ -40,8 +50,13 @@ export class Navigation extends BasePage {
     this.userButton = this.page.getByRole("button", { name: /Open user menu/ });
     this.cartLink = this.page.getByTestId("CartNavItem");
     this.searchInput = this.page.getByPlaceholder("Search for products...");
-    this.mobileMenuButton = this.page.getByRole("button", { name: "Open menu" });
+    this.mobileMenuButton = this.page.getByRole("button", {
+      name: "Open menu",
+    });
     this.mobileHomeLink = this.mobileMenuDialog.getByLabel("Homepage");
+    this.mobileSearchInput = this.mobileMenuDialog.getByPlaceholder(
+      "Search for products...",
+    );
   }
 
   async goto(option: NavigationOptions) {
@@ -69,9 +84,15 @@ export class Navigation extends BasePage {
     }
   }
 
+  async openMobileMenu() {
+    await expect(this.mobileMenuButton).toBeEnabled();
+    await this.mobileMenuButton.click();
+    await expect(this.mobileMenuDialog).toBeVisible();
+  }
+
   async goToHome() {
     if (await this.isMobile()) {
-      await this.mobileMenuButton.click();
+      await this.openMobileMenu();
       await expect(this.mobileHomeLink).toBeVisible();
       await this.mobileHomeLink.click();
       return;
@@ -82,7 +103,7 @@ export class Navigation extends BasePage {
 
   async goToAll() {
     if (await this.isMobile()) {
-      await this.mobileMenuButton.click();
+      await this.openMobileMenu();
     }
     await expect(this.allLink).toBeVisible();
     await this.allLink.click();
@@ -90,7 +111,7 @@ export class Navigation extends BasePage {
 
   async goToApparel() {
     if (await this.isMobile()) {
-      await this.mobileMenuButton.click();
+      await this.openMobileMenu();
     }
     await expect(this.apparelLink).toBeVisible();
     await this.apparelLink.click();
@@ -98,7 +119,7 @@ export class Navigation extends BasePage {
 
   async goToAccessories() {
     if (await this.isMobile()) {
-      await this.mobileMenuButton.click();
+      await this.openMobileMenu();
     }
     await expect(this.accessoriesLink).toBeVisible();
     await this.accessoriesLink.click();
@@ -106,7 +127,7 @@ export class Navigation extends BasePage {
 
   async goToGroceries() {
     if (await this.isMobile()) {
-      await this.mobileMenuButton.click();
+      await this.openMobileMenu();
     }
     await expect(this.groceriesLink).toBeVisible();
     await this.groceriesLink.click();
@@ -125,8 +146,13 @@ export class Navigation extends BasePage {
 
   async search(query: string) {
     if (await this.isMobile()) {
-      await this.mobileMenuButton.click();
+      await this.openMobileMenu();
+      await expect(this.mobileSearchInput).toBeVisible();
+      await this.mobileSearchInput.fill(query);
+      await this.mobileSearchInput.press("Enter");
+      return new SearchPage(this.page);
     }
+    await expect(this.searchInput).toBeVisible();
     await this.searchInput.fill(query);
     await this.searchInput.press("Enter");
     return new SearchPage(this.page);

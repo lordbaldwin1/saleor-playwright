@@ -114,14 +114,13 @@ export class CheckoutPage extends BasePage {
       name: "Return to shipping",
     });
 
-    // order summary
-    this.mobileOrderSummaryExpandButton = this.page.getByRole("button", { name: /(Show|Hide) order summary/ });
-    this.orderSummary = this.page
-      .getByRole("article")
-      .filter({
-        visible: true,
-        has: this.page.getByRole("heading", { name: "Order Summary" }),
-      });
+    // order summary — mobile hides the "Order Summary" heading; match the visible article instead
+    this.mobileOrderSummaryExpandButton = this.page.getByRole("button", {
+      name: /(Show|Hide) order summary/,
+    });
+    this.orderSummary = this.page.locator(".order-summary-inner").filter({
+      visible: true,
+    })
     this.voucherCodeInput = this.orderSummary.getByPlaceholder("Discount code");
     this.applyVoucherButton = this.orderSummary.getByRole("button", {
       name: "Apply",

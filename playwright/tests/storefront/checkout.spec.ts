@@ -108,6 +108,9 @@ test.describe("Guest checkout", () => {
     }
     await expect(checkoutPage.voucherCodeInput).toBeVisible();
     await checkoutPage.applyVoucherCode(voucherCode.code);
+    if (await checkoutPage.isMobile()) {
+      await checkoutPage.toggleMobileOrderSummary();
+    }
     await expect(checkoutPage.validVoucherCard).toBeVisible();
 
     // order summary checks
