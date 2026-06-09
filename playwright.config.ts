@@ -49,7 +49,7 @@ export default defineConfig({
         storageState: config.storefrontCustomerAuthFile,
       },
       dependencies: ['storefront-setup'],
-    }
+    },
     // {
     //   name: "dashboard",
     //   testDir: "./playwright/tests/dashboard",
@@ -58,16 +58,16 @@ export default defineConfig({
     //     baseURL: config.dashboardUrl,
     //   },
     // },
-    // {
-    //   name: "api",
-    //   testDir: "./playwright/tests/api",
-    //   use: {
-    //     baseURL: config.apiUrl,
-    //     extraHTTPHeaders: {
-    //       "Content-Type": "application/json",
-    //     },
-    //   },
-    // },
+    {
+      name: "api",
+      testDir: "./playwright/tests/api",
+      use: {
+        baseURL: config.apiUrl,
+        extraHTTPHeaders: {
+          "Content-Type": "application/json",
+        },
+      },
+    },
   ],
   ...(config.startServers
     ? {

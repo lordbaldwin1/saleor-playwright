@@ -1,11 +1,11 @@
 import { request, type APIRequestContext, type Page } from "@playwright/test";
+import { AuthApi } from "../api-client/AuthApi";
+import { GqlClient } from "../api-client/GqlClient";
 import { config } from "../config";
-import { gql } from "./graphql";
 
 const ACCESS_TOKEN_MAX_AGE = 15 * 60;
 const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60;
 
-/** Matches storefront encodeCookieName in src/lib/auth/constants.ts */
 function encodeCookieName(key: string): string {
   return key.replace(/[^a-zA-Z0-9_-]/g, "_");
 }
@@ -40,111 +40,27 @@ export async function setStorefrontAuthCookies(
   ]);
 }
 
-export async function apiCreateCustomer(
-  request: APIRequestContext,
-  email: string,
-  password: string,
-) {
-  const redirectUrl = config.storefrontUrl;
-  const channel = config.defaultChannel;
-  const query = `
-    mutation RegisterAccount($email: String!, $password: String!, $redirectUrl: String, $channel: String) {
-      accountRegister(input: {email: $email, password: $password, redirectUrl: $redirectUrl, channel: $channel}) {
-        errors {
-          field
-          message
-        }
-        requiresConfirmation
-      }
-    }
-  `;
-  const { accountRegister } = await gql<{
-    accountRegister: {
-      requiresConfirmation: boolean;
-      errors: Array<{ field: string; message: string }>;
-    };
-  }>(request, query, { email, password, redirectUrl, channel });
-
-  if (accountRegister.errors.length > 0) {
-    throw new Error(
-      accountRegister.errors
-        .map((e) => `${e.field ?? "?"}: ${e.message}`)
-        .join("; "),
-    );
-  }
-
-  if (accountRegister.requiresConfirmation) {
-    throw new Error("Account requires confirmation");
-  }
-
-  return;
-}
-
-export async function apiCreateToken(
-  request: APIRequestContext,
-  email: string,
-  password: string,
-) {
-  const query = `
-    mutation TokenCreate($email: String!, $password: String!) {
-      tokenCreate(email: $email, password: $password) {
-        token
-        refreshToken
-        errors {
-          field
-          message
-          code
-        }
-      }
-    }
-  `;
-
-  const { tokenCreate } = await gql<{
-    tokenCreate: {
-      token: string;
-      refreshToken: string;
-      errors: Array<{ field: string; message: string; code: string }>;
-    };
-  }>(request, query, { email, password });
-
-  if (tokenCreate.errors.length > 0) {
-    throw new Error(
-      tokenCreate.errors
-        .map((e) => `${e.field ?? "?"}: ${e.message}`)
-        .join("; "),
-    );
-  }
-
-  return tokenCreate;
-}
-
 export async function apiLoginBrowser(
   page: Page,
   email: string,
   password: string,
 ) {
-  const { token, refreshToken } = await apiCreateToken(
-    page.request,
-    email,
-    password,
-  );
+  const authApi = new AuthApi(new GqlClient(page.request));
+  const { token, refreshToken } = await authApi.createToken(email, password);
   await setStorefrontAuthCookies(page, token, refreshToken);
-  return;
 }
 
-export async function apiLoginRequest(
+export async function apiLoginRequestContext(
   initialRequest: APIRequestContext,
   email: string,
   password: string,
 ): Promise<APIRequestContext> {
-  const { token } = await apiCreateToken(initialRequest, email, password);
+  const authApi = new AuthApi(new GqlClient(initialRequest));
+  const { token } = await authApi.createToken(email, password);
   // initialRequest can't be mutated — create a new context with the token.
-  const authenticatedRequest = await request.newContext({
+  return request.newContext({
     extraHTTPHeaders: {
       Authorization: `Bearer ${token}`,
     },
   });
-  return authenticatedRequest;
 }
-
-
