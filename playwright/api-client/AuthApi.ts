@@ -1,5 +1,6 @@
 import { GqlClient } from "./GqlClient";
 import { config } from "../config";
+import { request } from "@playwright/test";
 
 export class AuthApi {
   private readonly gqlClient: GqlClient;
@@ -9,37 +10,40 @@ export class AuthApi {
   }
 
   async createCustomer(email: string, password: string) {
-    const redirectUrl = config.storefrontUrl;
-    const channel = config.defaultChannel;
     const query = `
-      mutation RegisterAccount($email: String!, $password: String!, $redirectUrl: String, $channel: String) {
-        accountRegister(input: {email: $email, password: $password, redirectUrl: $redirectUrl, channel: $channel}) {
+      mutation AccountRegister(
+        $channel: String!,
+        $email: String!,
+        $password: String!
+      ) {
+        accountRegister(
+          input: {
+            channel: $channel,
+            email: $email,
+            password: $password
+          }
+        ) {
+          requiresConfirmation
           errors {
             field
             message
+            code
           }
-          requiresConfirmation
         }
       }
     `;
+    const variables = {
+      channel: config.defaultChannel,
+      email,
+      password,
+    };
     const { accountRegister } = await this.gqlClient.mutation<{
       accountRegister: {
         requiresConfirmation: boolean;
-        errors: Array<{ field: string; message: string }>;
+        errors: Array<{ field: string; message: string; code: string }>;
       };
-    }>(query, { email, password, redirectUrl, channel });
-
-    if (accountRegister.errors.length > 0) {
-      throw new Error(
-        accountRegister.errors
-          .map((e) => `${e.field ?? "?"}: ${e.message}`)
-          .join("; "),
-      );
-    }
-
-    if (accountRegister.requiresConfirmation) {
-      throw new Error("Account requires confirmation");
-    }
+    }>(query, variables);
+    return accountRegister;
   }
 
   async createToken(email: string, password: string) {
@@ -48,6 +52,7 @@ export class AuthApi {
         tokenCreate(email: $email, password: $password) {
           token
           refreshToken
+          csrfToken
           errors {
             field
             message
@@ -59,20 +64,64 @@ export class AuthApi {
 
     const { tokenCreate } = await this.gqlClient.mutation<{
       tokenCreate: {
-        token: string;
-        refreshToken: string;
+        token: string | null;
+        refreshToken: string | null;
+        csrfToken: string | null;
         errors: Array<{ field: string; message: string; code: string }>;
       };
     }>(query, { email, password });
-
-    if (tokenCreate.errors.length > 0) {
-      throw new Error(
-        tokenCreate.errors
-          .map((e) => `${e.field ?? "?"}: ${e.message}`)
-          .join("; "),
-      );
-    }
-
     return tokenCreate;
+  }
+
+  async tokenVerify(token: string) {
+    const query = `
+      mutation TokenVerify($token: String!) {
+        tokenVerify(token: $token) {
+          isValid
+          errors {
+            field
+            message
+            code
+          }
+        }
+      }`;
+    const variables = {
+      token,
+    };
+
+    const { tokenVerify } = await this.gqlClient.mutation<{
+      tokenVerify: {
+        isValid: boolean;
+        errors: {
+          field: string;
+          message: string;
+          code: string;
+        }[];
+      };
+    }>(query, variables);
+    return tokenVerify;
+  }
+
+  async me(token: string) {
+    const query = `
+      query Me {
+        me {
+          email
+        }
+      }
+    `;
+    const authRequest = await request.newContext({
+      extraHTTPHeaders: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    try {
+      const { me } = await new GqlClient(authRequest).query<{
+        me: { email: string } | null;
+      }>(query);
+      return me;
+    } finally {
+      await authRequest.dispose();
+    }
   }
 }
