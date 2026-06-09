@@ -21,13 +21,43 @@ test.describe("Saleor GraphQL API", () => {
 
   test("5 products in price range", async ({ request }) => {
     const api = new ProductsApi(new GqlClient(request));
-    const data = await api.getProductsInPriceRange(50, 100, 5) as any;
-    expect(data.products.totalCount).toBe(5);
+    const data = await api.getProductsInPriceRange(10, 100, 5);
+    expect(data.products.totalCount).toBe(22);
+    expect(data.products.edges.length).toBeLessThanOrEqual(10);
     for (const { node } of data.products.edges) {
       expect(node).toHaveProperty("id");
       expect(node).toHaveProperty("name");
       expect(node).toHaveProperty("category")
       expect(node.category).toHaveProperty("name");
     }
+  });
+
+  test("single product detail and availability", async ({ request }) => {
+    const api = new ProductsApi(new GqlClient(request));
+    const { products: { edges } } = await api.getProductsInPriceRange(undefined, undefined, 1);
+    expect(edges.length).toBeGreaterThan(0);
+    const productId = edges[0].node.id;
+
+    const { products } = await api.getSingleProduct(productId);
+    expect(products).toHaveProperty("edges");
+    expect(products.edges.length).toBeGreaterThan(0);
+    expect(products.edges[0]).toHaveProperty("node");
+
+    const { node: productNode } = products.edges[0];
+    expect(productNode).toHaveProperty("productVariants");
+    expect(productNode).toHaveProperty("isAvailable");
+    expect(productNode).toHaveProperty("media");
+    expect(productNode.isAvailable).toBe(true);
+    expect(productNode.media[0]).toHaveProperty("url");
+    expect(productNode.media[0]).toHaveProperty("alt");
+    expect(productNode.productVariants.edges.length).toBeGreaterThan(0);
+
+    const { node: productVariantNode } = productNode.productVariants.edges[0];
+    expect(productVariantNode).toHaveProperty("id");
+    expect(productVariantNode).toHaveProperty("name");
+  });
+
+  test("3-step authentication flow", async ({ request }) => {
+
   });
 });
