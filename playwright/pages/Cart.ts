@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { CheckoutPage } from "./CheckoutPage";
 
 
@@ -19,6 +19,8 @@ export class Cart {
 
   async checkout() {
     await this.checkoutButton.click();
-    return new CheckoutPage(this.page);
+    const checkoutPage = new CheckoutPage(this.page);
+    await expect(checkoutPage.contactInput).toBeVisible();
+    return checkoutPage;
   }
 }

@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import type { CreditCardDetails, ShippingDetails, ShippingMethods } from "../helpers/test-data";
 import { Navigation } from "./Navigation";
 import { OrderConfirmationPage } from "./OrderConfirmationPage";
@@ -159,14 +159,18 @@ export class CheckoutPage extends BasePage {
     if (details.phone) {
       await this.shippingPhoneInput.fill(details.phone);
     }
+
+    await expect(this.continueToShippingButton).toBeEnabled();
   }
 
   async continueToShipping() {
     await this.continueToShippingButton.click();
+    await expect(this.shippingMethodHeading).toBeVisible();
   }
 
   async selectDefaultShippingMethod() {
     await this.shippingMethods.first().click();
+    await expect(this.continueToPaymentButton).toBeEnabled();
   }
 
   async selectShippingMethod(method: ShippingMethods) {
@@ -190,6 +194,7 @@ export class CheckoutPage extends BasePage {
 
   async continueToPayment() {
     await this.continueToPaymentButton.click();
+    await expect(this.paymentHeading).toBeVisible();
   }
 
   async fillCreditCardForm(details: CreditCardDetails) {
@@ -198,6 +203,19 @@ export class CheckoutPage extends BasePage {
     await this.cardExpiryInput.fill(details.expiry);
     await this.cardCvcInput.fill(details.cvc);
     await this.cardNameInput.fill(details.nameOnCard);
+    await expect(this.payButton).toBeEnabled();
+  }
+
+  async getOrderSummaryTotalAndSubtotal() {
+    if (await this.isMobile()) {
+      await this.toggleMobileOrderSummary();
+    }
+    const subtotal = await this.getOrderSummarySubtotalAmount();
+    const total = await this.getOrderSummaryTotalAmount();
+    if (await this.isMobile()) {
+      await this.toggleMobileOrderSummary();
+    }
+    return { subtotal, total };
   }
 
   async getOrderSummarySubtotalAmount() {
@@ -228,8 +246,13 @@ export class CheckoutPage extends BasePage {
   }
 
   async applyVoucherCode(code: string) {
+    if (await this.isMobile()) {
+      this.toggleMobileOrderSummary();
+    }
+    await expect(this.voucherCodeInput).toBeVisible();
     await this.voucherCodeInput.fill(code);
     await this.applyVoucherButton.click();
+    await expect(this.validVoucherCard).toBeVisible();
   }
 
   async toggleMobileOrderSummary() {
@@ -238,6 +261,8 @@ export class CheckoutPage extends BasePage {
 
   async pay() {
     await this.payButton.click();
-    return new OrderConfirmationPage(this.page);
+    const orderConfirmationPage = new OrderConfirmationPage(this.page);
+    await expect(orderConfirmationPage.thankYouHeading).toBeVisible();
+    return orderConfirmationPage;
   }
 }

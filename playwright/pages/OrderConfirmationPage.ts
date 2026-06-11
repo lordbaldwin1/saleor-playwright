@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { Navigation } from "./Navigation";
 import { HomePage } from "./HomePage";
 import { BasePage } from "./BasePage";
@@ -67,6 +67,8 @@ export class OrderConfirmationPage extends BasePage {
 
   async continueShopping() {
     await this.continueShoppingLink.click();
-    return new HomePage(this.page);
+    const homePage = new HomePage(this.page);
+    await expect(homePage.productList).toBeVisible();
+    return homePage;
   }
 }

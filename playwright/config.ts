@@ -40,6 +40,7 @@ export const config = {
     `http://localhost:${process.env.DUMMY_PAYMENT_APP_PORT ?? "3001"}`,
   authDir: "playwright/.auth",
   storefrontCustomerAuthFile: "playwright/.auth/user.json",
+  voucherFile: "playwright/.auth/voucher.json",
   dashboardAuthFile: "playwright/.auth/dashboard.json",
   startServers: process.env.E2E_START_SERVERS === "1",
   customerPassword: process.env.CUSTOMER_PASSWORD ?? "testpassword",

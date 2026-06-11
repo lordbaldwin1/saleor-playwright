@@ -1,4 +1,4 @@
-import { test as base, expect, type APIRequestContext } from "@playwright/test";
+import { test as base, expect } from "@playwright/test";
 import { HomePage } from "../pages/HomePage";
 import { ProductsPage } from "../pages/ProductsPage";
 import { CheckoutPage } from "../pages/CheckoutPage";
@@ -11,9 +11,7 @@ import {
 } from "../helpers/test-data";
 import { AuthApi } from "../api-client/AuthApi";
 import { GqlClient } from "../api-client/GqlClient";
-import { VoucherApi } from "../api-client/VoucherApi";
-import { config } from "../config";
-import { apiLoginRequestContext } from "../helpers/auth";
+import { loadTestVoucher } from "../helpers/voucher-setup";
 import { SignupPage } from "../pages/SignupPage";
 import { LoginPage } from "../pages/LoginPage";
 
@@ -31,17 +29,11 @@ type Fixtures = {
   guestCheckoutNonDefaultShippingMethod: CheckoutData;
   signupTestData: SignupData;
   loginTestData: LoginData;
-  // api fixtures
-  authenticatedRequest: APIRequestContext;
   voucherCode: { code: string; discountValue: number };
   uniqueCustomer: LoginData;
 };
 
-type WorkerFixtures = {
-  workerStorageState: string;
-};
-
-const test = base.extend<Fixtures, WorkerFixtures>({
+const test = base.extend<Fixtures>({
   homePage: async ({ page }, use) => {
     await use(new HomePage(page));
   },
@@ -80,26 +72,13 @@ const test = base.extend<Fixtures, WorkerFixtures>({
   },
 
   // api fixtures
-  authenticatedRequest: async ({ request }, use) => {
-    const authenticatedRequest = await apiLoginRequestContext(
-      request,
-      config.adminEmail,
-      config.adminPassword,
-    );
-    await use(authenticatedRequest);
-    await authenticatedRequest.dispose();
+  voucherCode: async ({}, use) => {
+    await use(await loadTestVoucher());
   },
   uniqueCustomer: async ({ request, loginTestData }, use) => {
     const authApi = new AuthApi(new GqlClient(request));
     await authApi.createCustomer(loginTestData.email, loginTestData.password);
     await use(loginTestData);
-  },
-  voucherCode: async ({ authenticatedRequest, testData }, use) => {
-    const voucherApi = new VoucherApi(new GqlClient(authenticatedRequest));
-    const voucher = await voucherApi.createFixedOrderVoucher(
-      testData.voucherCode,
-    );
-    await use(voucher);
   },
 });
 

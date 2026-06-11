@@ -143,6 +143,7 @@ export class Navigation extends BasePage {
   async goToCart() {
     await expect(this.cartLink).toBeVisible();
     await this.cartLink.click();
+    await expect(this.cart.checkoutButton).toBeVisible();
   }
 
   async search(query: string) {

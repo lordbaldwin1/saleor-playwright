@@ -47,18 +47,37 @@ export async function apiLoginBrowser(
 ) {
   const authApi = new AuthApi(new GqlClient(page.request));
   const { token, refreshToken } = await authApi.createToken(email, password);
-  await setStorefrontAuthCookies(page, token, refreshToken);
+  await setStorefrontAuthCookies(page, token!, refreshToken!);
+}
+
+async function createToken(
+  email: string,
+  password: string,
+): Promise<string> {
+  const cleanRequest = await request.newContext({
+    storageState: { cookies: [], origins: [] },
+  });
+  try {
+    const authApi = new AuthApi(new GqlClient(cleanRequest));
+    const { token, errors } = await authApi.createToken(email, password);
+    if (!token) {
+      const message =
+        errors?.map((e) => e.message).join("; ") || "no token returned";
+      throw new Error(`Failed to authenticate as ${email}: ${message}`);
+    }
+    return token;
+  } finally {
+    await cleanRequest.dispose();
+  }
 }
 
 export async function apiLoginRequestContext(
-  initialRequest: APIRequestContext,
   email: string,
   password: string,
 ): Promise<APIRequestContext> {
-  const authApi = new AuthApi(new GqlClient(initialRequest));
-  const { token } = await authApi.createToken(email, password);
-  // initialRequest can't be mutated — create a new context with the token.
+  const token = await createToken(email, password);
   return request.newContext({
+    storageState: { cookies: [], origins: [] },
     extraHTTPHeaders: {
       Authorization: `Bearer ${token}`,
     },

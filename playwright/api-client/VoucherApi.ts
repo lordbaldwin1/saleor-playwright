@@ -22,11 +22,16 @@ export class VoucherApi {
     code: string;
     discountValue: number;
     channelSlug?: string;
+    singleUse?: boolean;
   }) {
-    const { code, discountValue, channelSlug = config.defaultChannel } =
-      options;
+    const {
+      code,
+      discountValue,
+      channelSlug = config.defaultChannel,
+      singleUse = true,
+    } = options;
 
-    const voucher = await this.createVoucher(code);
+    const voucher = await this.createVoucher(code, singleUse);
     const channel = await this.getChannelBySlug(channelSlug);
     await this.updateVoucherChannelListing(
       voucher.id,
@@ -37,7 +42,7 @@ export class VoucherApi {
     return { code, discountValue };
   }
 
-  async createVoucher(code: string) {
+  async createVoucher(code: string, singleUse = true) {
     const mutation = `
       mutation VoucherCreate($input: VoucherInput!) {
         voucherCreate(input: $input) {
@@ -66,7 +71,7 @@ export class VoucherApi {
         type: "ENTIRE_ORDER",
         discountValueType: "FIXED",
         applyOncePerOrder: true,
-        singleUse: true,
+        singleUse,
       },
     });
 
