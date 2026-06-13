@@ -6,12 +6,14 @@ import { BasePage } from "./BasePage";
 export class HomePage extends BasePage {
   readonly navigation: Navigation;
   readonly productList: Locator;
+  readonly productElements: Locator;
   readonly loginLink: Locator;
 
   constructor(page: Page) {
     super(page);
     this.navigation = new Navigation(this.page);
     this.productList = this.page.getByTestId("ProductList");
+    this.productElements = this.page.getByTestId("ProductElement");
     this.loginLink = this.page.getByRole("link", { name: "Log in" });
   }
 

@@ -58,16 +58,17 @@ export default defineConfig({
     //     baseURL: config.dashboardUrl,
     //   },
     // },
-    // {
-    //   name: "api",
-    //   testDir: "./playwright/tests/api",
-    //   use: {
-    //     baseURL: config.apiUrl,
-    //     extraHTTPHeaders: {
-    //       "Content-Type": "application/json",
-    //     },
-    //   },
-    // },
+    {
+      name: "api",
+      testDir: "./playwright/tests/api",
+      use: {
+        baseURL: config.apiUrl,
+        extraHTTPHeaders: {
+          "Content-Type": "application/json",
+        },
+      },
+      dependencies: ["storefront-setup"],
+    },
   ],
   ...(config.startServers
     ? {

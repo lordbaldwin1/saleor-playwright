@@ -54,7 +54,6 @@ test.describe("API cmoke tests", () => {
 
     const { node: productVariantNode } = productNode.productVariants.edges[0];
     expect(productVariantNode).toHaveProperty("id");
-    console.log(productVariantNode.id);
     expect(productVariantNode).toHaveProperty("name");
   });
 
